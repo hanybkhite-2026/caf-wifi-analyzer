@@ -15,10 +15,18 @@ import {
   Router, ShieldCheck, AlertCircle, RefreshCw, ChevronRight
 } from 'lucide-react';
 
+// Custom Radio icon fallback
+function RadioIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.4"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.4"/><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/>
+    </svg>
+  );
+}
+
 export default function CAFWiFiAnalyzer() {
   // Auth State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [adminName, setAdminName] = useState('');
   const [email, setEmail] = useState('admin@caf.com');
   const [password, setPassword] = useState('admin123');
@@ -52,7 +60,7 @@ export default function CAFWiFiAnalyzer() {
   const [isScanning, setIsScanning] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
 
-  // Define tabs configuration
+  // Define tabs configuration inside component to avoid closure issues
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'spectrum', label: 'Spectrum', icon: TrendingUp },
@@ -63,7 +71,7 @@ export default function CAFWiFiAnalyzer() {
     { id: 'settings', label: 'Settings', icon: Zap }
   ];
 
-  // Hydration Safety
+  // Hydration Safety: Set values that differ between server/client in useEffect
   useEffect(() => {
     setSpeedTest(prev => ({ ...prev, timestamp: new Date().toLocaleString() }));
   }, []);
@@ -210,7 +218,7 @@ export default function CAFWiFiAnalyzer() {
             </div>
 
             {loginError && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium animate-shake">
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">
                 {loginError}
               </div>
             )}
@@ -250,9 +258,6 @@ export default function CAFWiFiAnalyzer() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[10px] font-bold uppercase">
-              <Signal className="w-3 h-3" /> Spectrum Mode
-            </div>
             <button onClick={() => setAudioEnabled(!audioEnabled)} className="p-2 rounded-xl hover:bg-slate-500/10 transition-all">
               {audioEnabled ? <Volume2 className="w-5 h-5 text-green-500" /> : <VolumeX className="w-5 h-5 text-red-500" />}
             </button>
@@ -296,7 +301,7 @@ export default function CAFWiFiAnalyzer() {
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { label: 'CAF Networks', value: '6', change: '+2.5%', icon: Radio, color: 'text-blue-500' },
+                { label: 'CAF Networks', value: '6', change: '+2.5%', icon: RadioIcon, color: 'text-blue-500' },
                 { label: 'Active APs', value: '18', change: 'Stable', icon: Router, color: 'text-cyan-500' },
                 { label: 'Avg Signal', value: '-52 dBm', change: '+1.2%', icon: Signal, color: 'text-purple-500' },
                 { label: 'Health', value: '98%', change: 'Normal', icon: ShieldCheck, color: 'text-green-500' }
@@ -308,7 +313,7 @@ export default function CAFWiFiAnalyzer() {
                   <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">{stat.label}</div>
                   <div className="text-3xl font-black font-headline mb-2">{stat.value}</div>
                   <div className="text-[10px] font-bold text-green-500 flex items-center gap-1">
-                    <Zap className="w-3 h-3" /> {stat.change} since last scan
+                    <Zap className="w-3 h-3" /> {stat.change}
                   </div>
                 </div>
               ))}
@@ -394,7 +399,7 @@ export default function CAFWiFiAnalyzer() {
           </div>
         )}
 
-        {/* Other Tabs simplified for length */}
+        {/* Other modules fallback */}
         {['scanner', 'analytics', 'reports', 'admin', 'settings'].includes(activeTab) && (
           <div className="py-20 text-center animate-in fade-in duration-1000">
             <Activity className="w-12 h-12 text-slate-800 mx-auto mb-6 opacity-20" />
@@ -411,7 +416,7 @@ export default function CAFWiFiAnalyzer() {
       <footer className={`${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-slate-100 border-slate-200'} border-t fixed bottom-0 left-0 right-0 z-40 px-6 py-2`}>
         <div className="max-w-7xl mx-auto flex justify-between items-center text-[10px] font-mono tracking-widest uppercase">
           <div className="flex gap-8">
-            <span className="text-slate-500">BUILD: <span className="text-blue-500">v3.6.0-PROD</span></span>
+            <span className="text-slate-500">BUILD: <span className="text-blue-500">v3.6.0-FIXED</span></span>
             <span className="hidden sm:inline text-slate-500">ENGINE: <span className="text-slate-400">NEXTJS-GENKIT</span></span>
           </div>
           <div className="flex gap-8">
@@ -421,14 +426,5 @@ export default function CAFWiFiAnalyzer() {
         </div>
       </footer>
     </div>
-  );
-}
-
-// Custom Radio icon fallback
-function Radio({ className }: { className?: string }) {
-  return (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.4"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.4"/><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/>
-    </svg>
   );
 }
