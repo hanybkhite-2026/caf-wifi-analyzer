@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Label } from "@/components/ui/label";
-import { Moon, Sun, Info, HelpCircle, Database, Server, Smartphone, Monitor } from "lucide-react";
+import { Moon, Sun, Info, HelpCircle, Database, Server, Smartphone, Monitor, User, Mail } from "lucide-react";
 
 interface SettingsTabProps {
   theme: 'light' | 'dark';
@@ -91,12 +91,12 @@ export function SettingsTab({ theme, toggleTheme }: SettingsTabProps) {
         </CardContent>
       </Card>
 
-      <Card className="glass border-none gradient-card-blue-cyan border-none">
-        <CardHeader>
-          <CardTitle className="text-lg font-headline">System Information</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="glass border-none gradient-card-blue-cyan">
+          <CardHeader>
+            <CardTitle className="text-lg font-headline">System Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-500/20 text-blue-500"><Server className="w-4 h-4" /></div>
               <div>
@@ -111,19 +111,46 @@ export function SettingsTab({ theme, toggleTheme }: SettingsTabProps) {
                 <p className="text-sm font-bold">Firebase Firestore</p>
               </div>
             </div>
-          </div>
-          <div className="space-y-4">
-             <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                <p className="text-[10px] uppercase text-muted-foreground font-bold mb-2">Supported Standards</p>
-                <div className="flex flex-wrap gap-2">
-                  {['WiFi 6E', 'WiFi 6', 'WPA3', '802.11ax/ac'].map(s => (
-                    <span key={s} className="text-[10px] px-2 py-0.5 rounded bg-blue-500/20 text-blue-500 font-bold">{s}</span>
-                  ))}
-                </div>
-             </div>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="p-3 rounded-xl bg-white/5 border border-white/10 mt-2">
+              <p className="text-[10px] uppercase text-muted-foreground font-bold mb-2">Supported Standards</p>
+              <div className="flex flex-wrap gap-2">
+                {['WiFi 6E', 'WiFi 6', 'WPA3', '802.11ax/ac'].map(s => (
+                  <span key={s} className="text-[10px] px-2 py-0.5 rounded bg-blue-500/20 text-blue-500 font-bold">{s}</span>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass border-none border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="text-lg font-headline">Development Support</CardTitle>
+            <CardDescription>Contact for technical inquiries</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-background/50 border border-border">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-bold">Hany Bkhite</p>
+                <p className="text-xs text-muted-foreground">Senior Developer</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-background/50 border border-border">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Mail className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Email Support</p>
+                <a href="mailto:hany.bkhite@gdit.com" className="text-sm font-bold text-primary hover:underline">
+                  hany.bkhite@gdit.com
+                </a>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
       
       <div className="text-center py-4">
         <p className="text-xs text-muted-foreground">© 2024 CAF-WIFI Operations | NetPulse Infrastructure</p>
