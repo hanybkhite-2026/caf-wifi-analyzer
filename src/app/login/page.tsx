@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Wifi, Loader2, ShieldCheck, Key, AlertCircle } from "lucide-react";
+import { Wifi, Loader2, ShieldCheck, Key, AlertCircle, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { doc, setDoc } from 'firebase/firestore';
 import { firebaseConfig } from '@/firebase/config';
@@ -35,8 +35,8 @@ export default function LoginPage() {
     if (!auth || !db) {
       toast({
         variant: "destructive",
-        title: "System Not Ready",
-        description: "Firebase services are still initializing. Please wait a moment.",
+        title: "Initialization Error",
+        description: "Firebase services are not ready. Please refresh the page.",
       });
       return;
     }
@@ -45,15 +45,12 @@ export default function LoginPage() {
 
     try {
       if (isRegistering) {
-        // 1. Create the user in Firebase Auth
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         
-        // 2. Update the Auth profile
         await updateProfile(userCredential.user, {
           displayName: 'Admin User'
         });
 
-        // 3. Store extended user data in Firestore
         const userRef = doc(db, 'users', userCredential.user.uid);
         const userData = {
           uid: userCredential.user.uid,
@@ -92,18 +89,18 @@ export default function LoginPage() {
       let message = error.message || "An unexpected error occurred.";
 
       if (error.code === 'auth/api-key-not-valid') {
-        message = "The Firebase API key is rejected by the server. Please check the 'studio-80326841e-b8f17' project settings in Google Cloud to ensure the API key is valid and Firebase Auth is enabled.";
+        message = "CRITICAL: The API Key is rejected by Firebase. Please go to the Firebase Console, select project 'studio-80326841e-b8f17', and ensure Authentication is ENABLED and Email/Password provider is active.";
       } else if (error.code === 'auth/user-not-found') {
-        message = "No account found. Please click 'Register' first.";
+        message = "Account not found. Use the 'Register' toggle below to create your account first.";
       } else if (error.code === 'auth/wrong-password') {
         message = "Incorrect password.";
       } else if (error.code === 'auth/email-already-in-use') {
-        message = "Email already registered. Try signing in.";
+        message = "This email is already registered. Try signing in.";
       }
       
       toast({
         variant: "destructive",
-        title: "Authentication Error",
+        title: "Authentication Failed",
         description: message,
       });
     } finally {
@@ -133,7 +130,7 @@ export default function LoginPage() {
           </div>
           <div>
             <CardTitle className="text-2xl font-headline font-bold">NetPulse CAF</CardTitle>
-            <CardDescription>Enterprise WiFi Infrastructure Analyzer</CardDescription>
+            <CardDescription>Infrastructure Analyzer Login</CardDescription>
           </div>
         </CardHeader>
         <form onSubmit={handleAuth}>
@@ -166,12 +163,12 @@ export default function LoginPage() {
             {isRegistering ? (
               <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg text-primary border border-primary/20 text-xs font-medium">
                 <ShieldCheck className="w-4 h-4 shrink-0" />
-                <p>Registering <strong>Admin</strong> credentials.</p>
+                <p>Registering new <strong>Admin</strong> access.</p>
               </div>
             ) : (
               <div className="flex items-center gap-2 p-3 bg-blue-500/10 rounded-lg text-blue-500 border border-blue-500/20 text-xs font-medium">
                 <Key className="w-4 h-4 shrink-0" />
-                <p>Use your <strong>GDIT Admin</strong> credentials to sign in.</p>
+                <p>Sign in with your <strong>GDIT</strong> credentials.</p>
               </div>
             )}
           </CardContent>
@@ -189,12 +186,18 @@ export default function LoginPage() {
               {isRegistering ? "Already have an account? Sign In" : "Need an account? Register as Admin"}
             </Button>
             
-            <div className="mt-4 p-3 bg-secondary/30 rounded-lg border border-border text-[10px] text-muted-foreground font-mono">
-              <div className="flex items-center gap-1 mb-1 font-bold">
-                <AlertCircle className="w-3 h-3" /> CONFIG DIAGNOSTICS
+            <div className="mt-4 p-3 bg-secondary/30 rounded-lg border border-border text-[10px] text-muted-foreground font-mono w-full">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1 font-bold">
+                  <AlertCircle className="w-3 h-3" /> CONFIG CHECK
+                </div>
+                <Button variant="ghost" size="icon" className="h-4 w-4" onClick={() => window.location.reload()}>
+                  <RefreshCw className="w-2.5 h-2.5" />
+                </Button>
               </div>
-              <p>Project: {firebaseConfig.projectId}</p>
-              <p>API Key: {firebaseConfig.apiKey.substring(0, 8)}...</p>
+              <p className="truncate">Project: {firebaseConfig.projectId}</p>
+              <p className="truncate">Key: {firebaseConfig.apiKey.substring(0, 10)}...</p>
+              <p className="mt-2 text-[9px] text-orange-500 italic">If 'api-key-not-valid' persists, please verify Auth is enabled in Console.</p>
             </div>
           </CardFooter>
         </form>

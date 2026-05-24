@@ -2,11 +2,7 @@
 
 /**
  * Firebase configuration object.
- * These values are hardcoded to match your project 'studio-80326841e-b8f17'.
- * 
- * IMPORTANT: If you see 'auth/api-key-not-valid', please ensure:
- * 1. Firebase Auth is enabled in the Console (Build > Authentication).
- * 2. The API key below matches exactly what is in your Google Cloud Console.
+ * These values are derived from your project 'studio-80326841e-b8f17'.
  */
 export const firebaseConfig = {
   apiKey: "AIzaSyBwYlVyw8HVfvVbkSC4Dnrsw4Z3DG5PBRk",
