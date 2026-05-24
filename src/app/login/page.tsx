@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -31,11 +30,13 @@ export default function LoginPage() {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !db) {
+    
+    // Check if Firebase is initialized correctly
+    if (!auth || !db || (auth as any).config?.apiKey === "placeholder-api-key") {
       toast({
         variant: "destructive",
-        title: "Initialization Error",
-        description: "Firebase services are not available yet. Please refresh the page.",
+        title: "Configuration Missing",
+        description: "Please update src/firebase/config.ts with your real Firebase project keys.",
       });
       return;
     }
@@ -59,7 +60,6 @@ export default function LoginPage() {
           createdAt: new Date().toISOString()
         };
 
-        // Mutation without await as per guidelines
         setDoc(userRef, userData).catch(async (error) => {
           const permissionError = new FirestorePermissionError({
             path: userRef.path,
@@ -81,6 +81,7 @@ export default function LoginPage() {
         });
       }
     } catch (error: any) {
+      console.error("Auth Error:", error);
       let message = error.message || "An unexpected error occurred.";
       
       if (error.code === 'auth/user-not-found') {
@@ -89,6 +90,8 @@ export default function LoginPage() {
         message = "Incorrect email or password.";
       } else if (error.code === 'auth/email-already-in-use') {
         message = "This email is already registered.";
+      } else if (error.code === 'auth/invalid-api-key') {
+        message = "The Firebase API key is invalid. Check your config.ts.";
       }
       
       toast({
