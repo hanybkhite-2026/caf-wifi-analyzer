@@ -8,12 +8,11 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  experimental: {
-    allowedDevOrigins: [
-      '6000-firebase-studio-1779618280680.cluster-yy7ncoxb5zd4ouvntrhoc3go3k.cloudworkstations.dev',
-      '*.cloudworkstations.dev'
-    ],
-  },
+  // In Next.js 15, allowedDevOrigins is a top-level property
+  allowedDevOrigins: [
+    '6000-firebase-studio-1779618280680.cluster-yy7ncoxb5zd4ouvntrhoc3go3k.cloudworkstations.dev',
+    '*.cloudworkstations.dev'
+  ],
   images: {
     remotePatterns: [
       {
