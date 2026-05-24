@@ -1,20 +1,25 @@
+
 "use client";
 
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { MOCK_NETWORKS } from "@/lib/mock-data";
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, Radar,
-  CartesianGrid, Legend
+  CartesianGrid, AreaChart, Area
 } from 'recharts';
-import { Wifi, Router, Signal, ShieldCheck, Zap, Activity, AlertTriangle } from "lucide-react";
+import { Wifi, Router, Signal, ShieldCheck, Zap, Activity, AlertTriangle, Layers } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function DashboardTab() {
+  const [band, setBand] = useState<'2.4GHz' | '5GHz'>('5GHz');
+
   const performanceData = MOCK_NETWORKS.map(n => ({
     name: n.ssid,
     signal: Math.abs(n.signalStrength),
     bandwidth: n.bandwidthMbps,
-    interference: n.interferenceScore * 10, // Scale for better visibility
+    interference: n.interferenceScore * 10,
   }));
 
   const typeData = [
@@ -31,7 +36,35 @@ export function DashboardTab() {
     { subject: 'Speed', A: 85, fullMark: 150 },
   ];
 
-  const COLORS = ['#3b82f6', '#06b6d4', '#a855f7', '#10b981', '#f59e0b'];
+  // Logic to generate the "humps" for the Channel Graph
+  const channelGraphData = useMemo(() => {
+    const is2G = band === '2.4GHz';
+    const channels = is2G ? Array.from({ length: 14 }, (_, i) => i + 1) : [36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 149, 153, 157, 161, 165];
+    
+    // Create a dense range of points for smooth curves
+    const dataPoints: any[] = [];
+    const minChan = Math.min(...channels) - 2;
+    const maxChan = Math.max(...channels) + 2;
+    
+    for (let i = minChan; i <= maxChan; i += 0.5) {
+      const point: any = { channel: i };
+      MOCK_NETWORKS.filter(n => n.frequencyBand === band).forEach(net => {
+        const dist = Math.abs(i - net.channel);
+        // Gaussian-like hump: Signal strength drops off as we move from center channel
+        if (dist <= 2) {
+          // Normalize signal: -30 is top (100), -90 is bottom (0)
+          const strength = Math.max(0, (net.signalStrength + 100));
+          point[net.ssid] = strength * (1 - (dist / 2));
+        } else {
+          point[net.ssid] = 0;
+        }
+      });
+      dataPoints.push(point);
+    }
+    return dataPoints;
+  }, [band]);
+
+  const COLORS = ['#3b82f6', '#06b6d4', '#a855f7', '#10b981', '#f59e0b', '#ec4899'];
 
   return (
     <div className="space-y-6">
@@ -60,6 +93,61 @@ export function DashboardTab() {
           </Card>
         ))}
       </div>
+
+      {/* Channel Graph - Professional Spectral View */}
+      <Card className="glass border-none shadow-lg overflow-hidden">
+        <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <CardTitle className="text-lg font-headline flex items-center gap-2">
+              <Layers className="w-5 h-5 text-primary" /> Channel Spectrum Graph
+            </CardTitle>
+            <CardDescription>Visualizing signal overlap and channel congestion</CardDescription>
+          </div>
+          <Tabs value={band} onValueChange={(v) => setBand(v as any)} className="w-auto">
+            <TabsList className="bg-background/50">
+              <TabsTrigger value="2.4GHz">2.4 GHz</TabsTrigger>
+              <TabsTrigger value="5GHz">5 GHz</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </CardHeader>
+        <CardContent className="h-[400px] pt-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={channelGraphData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={true} stroke="#333" />
+              <XAxis 
+                dataKey="channel" 
+                type="number" 
+                domain={['dataMin', 'dataMax']} 
+                stroke="#888" 
+                fontSize={12} 
+                label={{ value: 'WiFi Channels', position: 'insideBottom', offset: -5, fill: '#888' }}
+              />
+              <YAxis 
+                stroke="#888" 
+                fontSize={12} 
+                domain={[0, 100]} 
+                label={{ value: 'Signal Strength (dBm Equiv)', angle: -90, position: 'insideLeft', fill: '#888' }} 
+              />
+              <Tooltip 
+                contentStyle={{ backgroundColor: 'rgba(23, 23, 23, 0.9)', border: 'none', borderRadius: '12px' }}
+                labelFormatter={(v) => `Channel ${v}`}
+              />
+              {MOCK_NETWORKS.filter(n => n.frequencyBand === band).map((net, i) => (
+                <Area
+                  key={net.ssid}
+                  type="monotone"
+                  dataKey={net.ssid}
+                  stroke={COLORS[i % COLORS.length]}
+                  fill={COLORS[i % COLORS.length]}
+                  fillOpacity={0.3}
+                  strokeWidth={2}
+                  connectNulls
+                />
+              ))}
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="glass border-none shadow-lg">
@@ -160,56 +248,6 @@ export function DashboardTab() {
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="glass border-none">
-          <CardHeader>
-            <CardTitle className="text-lg font-headline">Spectral Analysis (Radar)</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                <PolarGrid stroke="#333" />
-                <PolarAngleAxis dataKey="subject" fontSize={10} stroke="#888" />
-                <Radar
-                  name="Quality"
-                  dataKey="A"
-                  stroke="#3b82f6"
-                  fill="#3b82f6"
-                  fillOpacity={0.6}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 gap-4">
-          <Card className="glass border-none gradient-card-green">
-            <CardContent className="p-6 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-green-500 mb-1">5GHz Band Status</h3>
-                <p className="text-xl font-bold font-headline">Excellent Connectivity</p>
-                <p className="text-xs text-muted-foreground mt-1">Noise floor: -98dBm | No congestion</p>
-              </div>
-              <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
-                <ShieldCheck className="text-green-500 w-6 h-6" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="glass border-none gradient-card-orange">
-            <CardContent className="p-6 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-orange-500 mb-1">2.4GHz Band Status</h3>
-                <p className="text-xl font-bold font-headline">High Interference</p>
-                <p className="text-xs text-muted-foreground mt-1">Overlapping channels detected: 1, 6, 11</p>
-              </div>
-              <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center">
-                <Zap className="text-orange-500 w-6 h-6" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   );
