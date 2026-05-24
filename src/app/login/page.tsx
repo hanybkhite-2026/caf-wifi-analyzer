@@ -14,8 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { doc, setDoc, getFirestore } from 'firebase/firestore';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('hanybkhite@gmail.com');
+  const [password, setPassword] = useState('Hany1234!@#$');
   const [isLoading, setIsLoading] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const { auth } = useAuth();
@@ -35,7 +35,7 @@ export default function LoginPage() {
         await setDoc(doc(db, 'users', userCredential.user.uid), {
           uid: userCredential.user.uid,
           email: email,
-          role: 'admin', // Defaulting first user to admin for simplicity in this MVP
+          role: 'admin',
           createdAt: new Date().toISOString()
         });
         toast({ title: "Account created", description: "Welcome to NetPulse CAF." });
