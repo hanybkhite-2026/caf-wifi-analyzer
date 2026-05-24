@@ -9,7 +9,7 @@ import {
 import { 
   Wifi, Sun, Moon, Settings, BarChart3, Network, TrendingUp, 
   Activity, Zap, Volume2, VolumeX, LogOut, Mail, Lock, 
-  Globe, Gauge, Loader, Eye, EyeOff 
+  Globe, Gauge, Loader, Eye, EyeOff, Signal, Router, ShieldCheck, FileText, Crosshair
 } from 'lucide-react';
 
 export default function CAFWiFiAnalyzer() {
@@ -50,6 +50,17 @@ export default function CAFWiFiAnalyzer() {
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
+
+  // Define tabs configuration
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'spectrum', label: 'Spectrum', icon: TrendingUp },
+    { id: 'scanner', label: 'Scanner', icon: Network },
+    { id: 'analytics', label: 'Analytics', icon: Activity },
+    { id: 'reports', label: 'Reports', icon: FileText },
+    { id: 'admin', label: 'Admin', icon: Settings },
+    { id: 'settings', label: 'Settings', icon: Zap }
+  ];
 
   // Initialize client-side values after hydration
   useEffect(() => {
@@ -141,92 +152,6 @@ export default function CAFWiFiAnalyzer() {
     }
   };
 
-  const playSignalBeep = (signal: number) => {
-    const signalStrength = Math.max(0, Math.min(100, (-signal - (-90)) / 30 * 100));
-    const frequency = 400 + (signalStrength / 100) * 800;
-    const volume = 0.1 + (signalStrength / 100) * 0.4;
-    const duration = 50 + (signalStrength / 100) * 100;
-    playBeep(frequency, duration, volume);
-  };
-
-  const CircularSpeedTest = ({ download, upload, ping, testing }: any) => {
-    const downloadPercent = Math.min((download / 1000) * 100, 100);
-    const uploadPercent = Math.min((upload / 500) * 100, 100);
-    
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="flex flex-col items-center">
-          <div className="relative w-32 h-32 mb-4">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="45" fill="none" stroke="#334155" strokeWidth="8" />
-              <circle 
-                cx="50" cy="50" r="45" fill="none" 
-                stroke="#3b82f6" strokeWidth="8"
-                strokeDasharray={`${(downloadPercent / 100) * 282.7} 282.7`}
-                strokeLinecap="round"
-                className="transition-all duration-1000"
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                {testing ? <Loader className="w-8 h-8 text-blue-500 mx-auto mb-1 animate-spin" /> : <Gauge className="w-8 h-8 text-blue-500 mx-auto mb-1" />}
-                <div className="text-2xl font-bold text-blue-500">{download}</div>
-                <div className="text-[10px] text-gray-500 uppercase">Mbps</div>
-              </div>
-            </div>
-          </div>
-          <div className="font-semibold text-sm">Download</div>
-        </div>
-
-        <div className="flex flex-col items-center">
-          <div className="relative w-32 h-32 mb-4">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="45" fill="none" stroke="#334155" strokeWidth="8" />
-              <circle 
-                cx="50" cy="50" r="45" fill="none" 
-                stroke="#10b981" strokeWidth="8"
-                strokeDasharray={`${(uploadPercent / 100) * 282.7} 282.7`}
-                strokeLinecap="round"
-                className="transition-all duration-1000"
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                {testing ? <Loader className="w-8 h-8 text-green-500 mx-auto mb-1 animate-spin" /> : <Gauge className="w-8 h-8 text-green-500 mx-auto mb-1" />}
-                <div className="text-2xl font-bold text-green-500">{upload}</div>
-                <div className="text-[10px] text-gray-500 uppercase">Mbps</div>
-              </div>
-            </div>
-          </div>
-          <div className="font-semibold text-sm">Upload</div>
-        </div>
-
-        <div className="flex flex-col items-center">
-          <div className="relative w-32 h-32 mb-4">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="45" fill="none" stroke="#334155" strokeWidth="8" />
-              <circle 
-                cx="50" cy="50" r="45" fill="none" 
-                stroke="#f59e0b" strokeWidth="8"
-                strokeDasharray={`${Math.max(0, (1 - ping / 50) * 282.7)} 282.7`}
-                strokeLinecap="round"
-                className="transition-all duration-1000"
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                {testing ? <Loader className="w-8 h-8 text-yellow-500 mx-auto mb-1 animate-spin" /> : <Gauge className="w-8 h-8 text-yellow-500 mx-auto mb-1" />}
-                <div className="text-2xl font-bold text-yellow-500">{ping}</div>
-                <div className="text-[10px] text-gray-500 uppercase">ms</div>
-              </div>
-            </div>
-          </div>
-          <div className="font-semibold text-sm">Ping</div>
-        </div>
-      </div>
-    );
-  };
-
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
@@ -258,13 +183,87 @@ export default function CAFWiFiAnalyzer() {
     setLoginError('');
   };
 
+  const CircularSpeedTest = ({ download, upload, ping, testing }: any) => {
+    const downloadPercent = Math.min((download / 1000) * 100, 100);
+    const uploadPercent = Math.min((upload / 500) * 100, 100);
+    
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="flex flex-col items-center">
+          <div className="relative w-32 h-32 mb-4">
+            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#334155" strokeWidth="8" />
+              <circle 
+                cx="50" cy="50" r="45" fill="none" 
+                stroke="#3b82f6" strokeWidth="8"
+                strokeDasharray={`${(downloadPercent / 100) * 282.7} 282.7`}
+                strokeLinecap="round"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                {testing ? <Loader className="w-8 h-8 text-blue-500 mx-auto mb-1 animate-spin" /> : <Gauge className="w-8 h-8 text-blue-500 mx-auto mb-1" />}
+                <div className="text-2xl font-bold text-blue-500">{download}</div>
+                <div className="text-[10px] text-gray-500 uppercase">Mbps</div>
+              </div>
+            </div>
+          </div>
+          <div className="font-semibold text-sm">Download</div>
+        </div>
+
+        <div className="flex flex-col items-center">
+          <div className="relative w-32 h-32 mb-4">
+            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#334155" strokeWidth="8" />
+              <circle 
+                cx="50" cy="50" r="45" fill="none" 
+                stroke="#10b981" strokeWidth="8"
+                strokeDasharray={`${(uploadPercent / 100) * 282.7} 282.7`}
+                strokeLinecap="round"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                {testing ? <Loader className="w-8 h-8 text-green-500 mx-auto mb-1 animate-spin" /> : <Gauge className="w-8 h-8 text-green-500 mx-auto mb-1" />}
+                <div className="text-2xl font-bold text-green-500">{upload}</div>
+                <div className="text-[10px] text-gray-500 uppercase">Mbps</div>
+              </div>
+            </div>
+          </div>
+          <div className="font-semibold text-sm">Upload</div>
+        </div>
+
+        <div className="flex flex-col items-center">
+          <div className="relative w-32 h-32 mb-4">
+            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#334155" strokeWidth="8" />
+              <circle 
+                cx="50" cy="50" r="45" fill="none" 
+                stroke="#f59e0b" strokeWidth="8"
+                strokeDasharray={`${Math.max(0, (1 - ping / 50) * 282.7)} 282.7`}
+                strokeLinecap="round"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                {testing ? <Loader className="w-8 h-8 text-yellow-500 mx-auto mb-1 animate-spin" /> : <Gauge className="w-8 h-8 text-yellow-500 mx-auto mb-1" />}
+                <div className="text-2xl font-bold text-yellow-500">{ping}</div>
+                <div className="text-[10px] text-gray-500 uppercase">ms</div>
+              </div>
+            </div>
+          </div>
+          <div className="font-semibold text-sm">Ping</div>
+        </div>
+      </div>
+    );
+  };
+
   const currentSpectrum = selectedBand === '2.4GHz' ? [
     { channel: 1, 'CAF-WIFI-2G': 65, 'CAF-IoT': 15, congestion: 80 },
     { channel: 6, 'CAF-WIFI-2G': 85, 'CAF-IoT': 32, congestion: 117 },
     { channel: 11, 'CAF-WIFI-2G': 50, 'CAF-IoT': 8, congestion: 58 },
   ] : [
     { channel: 36, 'CAF-WIFI-5G': 92, 'CAF-GUEST': 35, congestion: 127 },
-    { channel: 48, 'CAF-WIFI-5G': 80, 'CAF-GUEST': 35, congestion: 115 },
     { channel: 149, 'CAF-WIFI-5G': 72, 'CAF-ADMIN': 50, congestion: 122 },
   ];
 
@@ -277,10 +276,8 @@ export default function CAFWiFiAnalyzer() {
               <Wifi className="w-12 h-12 text-white" />
             </div>
           </div>
-          
           <h1 className="text-3xl font-bold text-center mb-2 text-white tracking-tight">NetPulse CAF</h1>
           <p className="text-center text-gray-400 mb-8">Enterprise Infrastructure Analyzer</p>
-
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label className="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-widest">Email Address</label>
@@ -295,7 +292,6 @@ export default function CAFWiFiAnalyzer() {
                 />
               </div>
             </div>
-
             <div>
               <label className="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-widest">Security Key</label>
               <div className="relative">
@@ -316,19 +312,16 @@ export default function CAFWiFiAnalyzer() {
                 </button>
               </div>
             </div>
-
             {loginError && (
               <div className="p-3 rounded-xl bg-red-600/10 border border-red-600/20 text-red-400 text-xs font-bold">
                 {loginError}
               </div>
             )}
-
             {authMode === 'login' && (
               <div className="p-3 rounded-xl bg-blue-600/10 border border-blue-600/20 text-blue-300 text-xs font-medium">
                 ✅ Demo: admin@caf.com / admin123
               </div>
             )}
-
             <button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95"
@@ -336,7 +329,6 @@ export default function CAFWiFiAnalyzer() {
               Sign In to Infrastructure
             </button>
           </form>
-
           <div className="text-center mt-8 text-xs text-gray-400">
             {authMode === 'login' ? "Access required? " : 'Already registered? '}
             <button
@@ -367,7 +359,6 @@ export default function CAFWiFiAnalyzer() {
               <p className="text-[10px] text-gray-500 font-bold uppercase">OP-MODE: {adminName}</p>
             </div>
           </div>
-
           <div className="flex items-center gap-4">
             <button onClick={() => setAudioEnabled(!audioEnabled)} className="p-2 rounded-lg hover:bg-dark-700 transition-colors">
               {audioEnabled ? <Volume2 className="w-5 h-5 text-green-500" /> : <VolumeX className="w-5 h-5 text-red-500" />}
@@ -380,7 +371,6 @@ export default function CAFWiFiAnalyzer() {
             </button>
           </div>
         </div>
-
         <nav className="border-t border-dark-700 bg-dark-900/50 overflow-x-auto no-scrollbar">
           <div className="max-w-7xl mx-auto px-6 flex gap-6">
             {tabs.map(tab => (
@@ -401,16 +391,18 @@ export default function CAFWiFiAnalyzer() {
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         {activeTab === 'dashboard' && (
-          <div className="space-y-8 animate-in fade-in duration-500">
+          <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { label: 'CAF Networks', value: '6', icon: '📡' },
-                { label: 'Active APs', value: '18', icon: '🛜' },
-                { label: 'Avg Signal', value: '-52 dBm', icon: '📶' },
-                { label: 'Health', value: '98%', icon: '❤️' }
+                { label: 'CAF Networks', value: '6', icon: Wifi, color: 'text-blue-500' },
+                { label: 'Active APs', value: '18', icon: Router, color: 'text-cyan-500' },
+                { label: 'Avg Signal', value: '-52 dBm', icon: Signal, color: 'text-purple-500' },
+                { label: 'Network Health', value: '98%', icon: ShieldCheck, color: 'text-green-500' }
               ].map((stat, i) => (
                 <div key={i} className="bg-dark-800 p-6 rounded-2xl border border-dark-700 hover:border-blue-500/30 transition-all">
-                  <div className="text-2xl mb-4">{stat.icon}</div>
+                  <div className={`p-2 rounded-lg bg-dark-900 w-fit mb-4 ${stat.color}`}>
+                    <stat.icon className="w-6 h-6" />
+                  </div>
                   <div className="text-[10px] font-bold uppercase text-gray-500 mb-1">{stat.label}</div>
                   <div className="text-3xl font-bold tracking-tight">{stat.value}</div>
                   <div className="text-[10px] text-green-500 font-bold mt-2">+2.5% STABLE</div>
@@ -435,7 +427,6 @@ export default function CAFWiFiAnalyzer() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-
               <div className="bg-dark-800 p-6 rounded-2xl border border-dark-700">
                 <h3 className="text-lg font-bold mb-6">Segment Distribution</h3>
                 <ResponsiveContainer width="100%" height={300}>
@@ -459,7 +450,7 @@ export default function CAFWiFiAnalyzer() {
         )}
 
         {activeTab === 'analytics' && (
-          <div className="space-y-6 animate-in zoom-in-95 duration-500">
+          <div className="space-y-6">
             <div className="bg-dark-800 p-8 rounded-3xl border border-dark-700 shadow-xl">
               <div className="flex justify-between items-center mb-10">
                 <div>
@@ -475,51 +466,22 @@ export default function CAFWiFiAnalyzer() {
                   {speedTest.testing ? 'EXECUTING TEST...' : 'INITIATE SPEED TEST'}
                 </button>
               </div>
-              
               <CircularSpeedTest 
                 download={speedTest.download} 
                 upload={speedTest.upload} 
                 ping={speedTest.ping}
                 testing={speedTest.testing}
               />
-              
               <div className="mt-10 pt-6 border-t border-dark-700 flex justify-between items-center text-[10px] font-mono text-gray-500">
                 <span>SERVER: ARUBA-OPS-01</span>
                 <span>TIMESTAMP: {speedTest.timestamp || 'WAITING...'}</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-dark-800 p-6 rounded-2xl border border-dark-700">
-                <h4 className="text-[10px] font-bold uppercase text-gray-500 mb-6 tracking-widest">Network Identification</h4>
-                <div className="space-y-3">
-                  {[
-                    { label: 'Public IP', val: networkInfo.ip, color: 'text-blue-400' },
-                    { label: 'ISP Provider', val: networkInfo.isp, color: 'text-white' },
-                    { label: 'Region', val: networkInfo.country, color: 'text-green-400' },
-                    { label: 'Primary DNS', val: networkInfo.dns1, color: 'text-cyan-400' }
-                  ].map((diag, i) => (
-                    <div key={i} className="flex justify-between items-center p-4 rounded-xl bg-dark-900/50 border border-dark-700/50">
-                      <span className="text-[10px] font-bold text-gray-500 uppercase">{diag.label}</span>
-                      <span className={`text-sm font-mono font-bold ${diag.color}`}>{diag.val}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-dark-800 p-12 rounded-2xl border border-dark-700 flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 text-blue-500">
-                  <Globe className="w-8 h-8" />
-                </div>
-                <h3 className="text-xl font-bold mb-2">Geolocation Active</h3>
-                <p className="text-sm text-gray-500">Your network metrics are optimized for the <strong>{networkInfo.country}</strong> region.</p>
               </div>
             </div>
           </div>
         )}
 
         {['spectrum', 'scanner', 'reports', 'admin', 'settings'].includes(activeTab) && (
-          <div className="bg-dark-800 p-20 rounded-3xl border border-dark-700 text-center space-y-6 animate-in slide-in-from-bottom-4">
+          <div className="bg-dark-800 p-20 rounded-3xl border border-dark-700 text-center space-y-6">
             <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto text-blue-500">
               <Zap className="w-10 h-10" />
             </div>
@@ -527,18 +489,6 @@ export default function CAFWiFiAnalyzer() {
             <p className="text-gray-500 text-sm max-w-sm mx-auto uppercase font-bold tracking-tighter">
               v3.6.0 Core loaded. Real-time data stream established with enterprise controllers.
             </p>
-            {activeTab === 'settings' && (
-              <div className="max-w-sm mx-auto p-6 bg-dark-900/50 rounded-2xl border border-dark-700 text-left space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary"><Mail /></div>
-                  <div><p className="text-[10px] font-bold text-gray-500">DEV EMAIL</p><p className="text-sm font-bold">hany.bkhite@gmail.com</p></div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-green-500/10 rounded-full flex items-center justify-center text-green-500"><Globe /></div>
-                  <div><p className="text-[10px] font-bold text-gray-500">ENGINEER</p><p className="text-sm font-bold">Hany Bkhite</p></div>
-                </div>
-              </div>
-            )}
           </div>
         )}
       </main>
