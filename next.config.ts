@@ -9,11 +9,12 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   experimental: {
-    // Corrected configuration for Next.js 15 dev environment
-    allowedOrigins: [
-      '6000-firebase-studio-1779618280680.cluster-yy7ncoxb5zd4ouvntrhoc3go3k.cloudworkstations.dev',
-      '*.cloudworkstations.dev'
-    ],
+    serverActions: {
+      allowedOrigins: [
+        '6000-firebase-studio-1779618280680.cluster-yy7ncoxb5zd4ouvntrhoc3go3k.cloudworkstations.dev',
+        '*.cloudworkstations.dev'
+      ],
+    },
   },
   images: {
     remotePatterns: [
