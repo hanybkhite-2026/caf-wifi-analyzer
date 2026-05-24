@@ -4,23 +4,139 @@ export interface NetworkScan {
   networkType: 'Main' | 'Guest' | 'IoT' | 'Admin' | 'Backup';
   signalStrength: number;
   channel: number;
+  frequencyMHz: number;
+  frequencyRange: string;
+  bandwidthMHz: number;
   clientsConnected: number;
   frequencyBand: '2.4GHz' | '5GHz' | '6GHz';
   encryption: string;
   location: string;
   interferenceScore: number;
   bandwidthMbps: number;
-  vendor?: string;
-  macAddress?: string;
+  vendor: string;
+  macAddress: string;
+  distance: string;
+  ipAddress?: string;
+  isCurrent?: boolean;
 }
 
 export const MOCK_NETWORKS: NetworkScan[] = [
-  { id: '1', ssid: 'CAF-WIFI-5G', networkType: 'Main', signalStrength: -45, channel: 36, clientsConnected: 15, frequencyBand: '5GHz', encryption: 'WPA3', location: 'Floor 1, Office A', interferenceScore: 1, bandwidthMbps: 850, vendor: 'Aruba Networks', macAddress: '00:0B:86:12:34:56' },
-  { id: '2', ssid: 'CAF-WIFI-2G', networkType: 'Main', signalStrength: -58, channel: 6, clientsConnected: 22, frequencyBand: '2.4GHz', encryption: 'WPA3', location: 'Floor 1, Lobby', interferenceScore: 4, bandwidthMbps: 150, vendor: 'Aruba Networks', macAddress: '00:0B:86:78:90:AB' },
-  { id: '3', ssid: 'CAF-GUEST', networkType: 'Guest', signalStrength: -65, channel: 52, clientsConnected: 8, frequencyBand: '5GHz', encryption: 'WPA2', location: 'Floor 1, Cafeteria', interferenceScore: 2, bandwidthMbps: 300, vendor: 'Aruba Networks', macAddress: '00:0B:86:CD:EF:01' },
-  { id: '4', ssid: 'CAF-IoT', networkType: 'IoT', signalStrength: -70, channel: 1, clientsConnected: 32, frequencyBand: '2.4GHz', encryption: 'WPA2', location: 'Basement, Utility', interferenceScore: 8, bandwidthMbps: 50, vendor: 'Cisco', macAddress: '00:11:22:33:44:55' },
-  { id: '5', ssid: 'CAF-ADMIN', networkType: 'Admin', signalStrength: -50, channel: 128, clientsConnected: 5, frequencyBand: '5GHz', encryption: 'WPA3-Enterprise', location: 'Floor 2, Exec', interferenceScore: 1, bandwidthMbps: 900, vendor: 'Aruba Networks', macAddress: '00:0B:86:44:55:66' },
-  { id: '6', ssid: 'CAF-BACKUP', networkType: 'Backup', signalStrength: -72, channel: 11, clientsConnected: 3, frequencyBand: '2.4GHz', encryption: 'WPA3', location: 'Floor 2, Server Room', interferenceScore: 5, bandwidthMbps: 100, vendor: 'Ubiquiti', macAddress: '24:5A:4C:99:88:77' },
+  { 
+    id: '1', 
+    ssid: 'CAF-WIFI-5G', 
+    networkType: 'Main', 
+    signalStrength: -45, 
+    channel: 36, 
+    frequencyMHz: 5180,
+    frequencyRange: '5170 - 5250 80 MHz',
+    bandwidthMHz: 80,
+    clientsConnected: 15, 
+    frequencyBand: '5GHz', 
+    encryption: '[WPA3]', 
+    location: 'Floor 1, Office A', 
+    interferenceScore: 1, 
+    bandwidthMbps: 850, 
+    vendor: 'ARUBA NETWORKS', 
+    macAddress: '00:0B:86:12:34:56',
+    distance: '~12.4m',
+    ipAddress: '192.168.100.15',
+    isCurrent: true 
+  },
+  { 
+    id: '2', 
+    ssid: 'CAF-WIFI-2G', 
+    networkType: 'Main', 
+    signalStrength: -67, 
+    channel: 6, 
+    frequencyMHz: 2437,
+    frequencyRange: '2427 - 2447 20 MHz',
+    bandwidthMHz: 20,
+    clientsConnected: 22, 
+    frequencyBand: '2.4GHz', 
+    encryption: '[WPS WPA WPA2]', 
+    location: 'Floor 1, Lobby', 
+    interferenceScore: 4, 
+    bandwidthMbps: 150, 
+    vendor: 'ARUBA NETWORKS', 
+    macAddress: '00:0B:86:78:90:AB',
+    distance: '~22.1m' 
+  },
+  { 
+    id: '3', 
+    ssid: 'CAF-GUEST', 
+    networkType: 'Guest', 
+    signalStrength: -79, 
+    channel: 149, 
+    frequencyMHz: 5745,
+    frequencyRange: '5735 - 5815 80 MHz',
+    bandwidthMHz: 80,
+    clientsConnected: 8, 
+    frequencyBand: '5GHz', 
+    encryption: '[WPA2]', 
+    location: 'Floor 1, Cafeteria', 
+    interferenceScore: 2, 
+    bandwidthMbps: 300, 
+    vendor: 'ARUBA NETWORKS', 
+    macAddress: '00:0B:86:CD:EF:01',
+    distance: '~37.0m' 
+  },
+  { 
+    id: '4', 
+    ssid: 'VTEL-Fiber', 
+    networkType: 'IoT', 
+    signalStrength: -85, 
+    channel: 1, 
+    frequencyMHz: 2412,
+    frequencyRange: '2402 - 2422 20 MHz',
+    bandwidthMHz: 20,
+    clientsConnected: 32, 
+    frequencyBand: '2.4GHz', 
+    encryption: '[WPA WPA2]', 
+    location: 'Basement, Utility', 
+    interferenceScore: 8, 
+    bandwidthMbps: 50, 
+    vendor: 'HUAWEI TECHNOLOGIES', 
+    macAddress: '7c:1c:f1:25:19:2c',
+    distance: '~175.8m' 
+  },
+  { 
+    id: '5', 
+    ssid: 'Mamon2_5G', 
+    networkType: 'Admin', 
+    signalStrength: -86, 
+    channel: 36, 
+    frequencyMHz: 5180,
+    frequencyRange: '5170 - 5250 80 MHz',
+    bandwidthMHz: 80,
+    clientsConnected: 5, 
+    frequencyBand: '5GHz', 
+    encryption: '[WPS WPA WPA2]', 
+    location: 'Floor 2, Exec', 
+    interferenceScore: 1, 
+    bandwidthMbps: 900, 
+    vendor: 'TP LINK TECHNOLOGIES', 
+    macAddress: '98:da:c4:26:21:87',
+    distance: '~91.9m' 
+  },
+  { 
+    id: '6', 
+    ssid: '*hidden*', 
+    networkType: 'Backup', 
+    signalStrength: -87, 
+    channel: 36, 
+    frequencyMHz: 5180,
+    frequencyRange: '5170 - 5250 80 MHz',
+    bandwidthMHz: 80,
+    clientsConnected: 3, 
+    frequencyBand: '5GHz', 
+    encryption: '[WPA2]', 
+    location: 'Floor 2, Server Room', 
+    interferenceScore: 5, 
+    bandwidthMbps: 100, 
+    vendor: 'GENERIC VENDOR', 
+    macAddress: '9e:da:c4:26:21:87',
+    distance: '~103.1m' 
+  },
 ];
 
 export const WEEKLY_ACTIVITY = [

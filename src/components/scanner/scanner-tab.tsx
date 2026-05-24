@@ -1,17 +1,31 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { MOCK_NETWORKS, type NetworkScan } from "@/lib/mock-data";
-import { Radio, MapPin, Play, Loader2, Wand2, RefreshCw, Volume2, VolumeX, Crosshair, X, Info } from "lucide-react";
+import { 
+  Radio, 
+  MapPin, 
+  Play, 
+  Loader2, 
+  Wand2, 
+  RefreshCw, 
+  Volume2, 
+  VolumeX, 
+  Crosshair, 
+  X, 
+  Info, 
+  Wifi, 
+  Lock, 
+  ShieldAlert 
+} from "lucide-react";
 import { aiNetworkOptimizer, type AiNetworkOptimizerOutput } from "@/ai/flows/ai-network-optimizer";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 
 export function ScannerTab() {
   const [location, setLocation] = useState("");
@@ -28,6 +42,8 @@ export function ScannerTab() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const { toast } = useToast();
+
+  const currentConnection = networks.find(n => n.isCurrent);
 
   const startScan = () => {
     if (!location) {
@@ -58,7 +74,6 @@ export function ScannerTab() {
     if (trackingNetwork) {
       setCurrentSignal(trackingNetwork.signalStrength);
       
-      // Setup Audio
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
@@ -70,7 +85,6 @@ export function ScannerTab() {
         const gain = audioContextRef.current.createGain();
         
         osc.type = 'sine';
-        // Frequency higher as signal gets stronger (-30 is better than -90)
         const freq = 400 + (Math.abs(currentSignal) < 40 ? 400 : 0) + (Math.abs(currentSignal + 90) * 2);
         osc.frequency.setValueAtTime(freq, audioContextRef.current.currentTime);
         
@@ -90,7 +104,6 @@ export function ScannerTab() {
         const delay = Math.max(50, (Math.abs(currentSignal) - 30) * 15);
         intervalRef.current = setInterval(() => {
           playBeep();
-          // Simulate slight signal fluctuation for realism
           setCurrentSignal(prev => {
             const fluctuation = (Math.random() - 0.5) * 4;
             const newVal = prev + fluctuation;
@@ -115,8 +128,8 @@ export function ScannerTab() {
   };
 
   const getSignalColor = (dBm: number) => {
-    if (dBm >= -50) return "text-green-500";
-    if (dBm >= -70) return "text-yellow-500";
+    if (dBm >= -55) return "text-green-500";
+    if (dBm >= -75) return "text-yellow-500";
     return "text-red-500";
   };
 
@@ -127,7 +140,7 @@ export function ScannerTab() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 max-w-4xl mx-auto">
       {trackingNetwork ? (
         <Card className="glass border-primary/50 shadow-2xl animate-in zoom-in-95 duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -137,178 +150,149 @@ export function ScannerTab() {
                 Locating Hidden AP: {trackingNetwork.ssid}
               </CardTitle>
               <CardDescription className="flex items-center gap-2">
-                <Badge variant="secondary">{trackingNetwork.vendor || 'Aruba Networks'}</Badge>
+                <Badge variant="secondary">{trackingNetwork.vendor}</Badge>
                 <span className="font-mono text-xs">{trackingNetwork.macAddress}</span>
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => setIsMuted(!isMuted)} title={isMuted ? "Unmute" : "Mute"}>
+              <Button variant="ghost" size="icon" onClick={() => setIsMuted(!isMuted)}>
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </Button>
-              <Button variant="ghost" size="icon" onClick={stopTracking} title="Close Tracker">
+              <Button variant="ghost" size="icon" onClick={stopTracking}>
                 <X className="w-5 h-5" />
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="py-8 space-y-8">
-            <div className="flex flex-col items-center justify-center text-center space-y-4">
-              <div className="relative w-48 h-48 flex items-center justify-center">
-                <div className={`absolute inset-0 rounded-full border-4 border-dashed border-primary/20 animate-spin-slow`} />
-                <div className="text-6xl font-bold font-headline transition-all duration-300" style={{ transform: `scale(${1 + getSignalPercent(currentSignal)/200})` }}>
-                  {Math.round(currentSignal)}
-                  <span className="text-xl ml-1 text-muted-foreground uppercase">dBm</span>
-                </div>
-              </div>
-              <div className="w-full max-w-md space-y-2">
-                <div className="flex justify-between text-xs font-bold uppercase">
-                  <span>Proximity Signal</span>
-                  <span>{Math.round(getSignalPercent(currentSignal))}%</span>
-                </div>
-                <Progress value={getSignalPercent(currentSignal)} className="h-4" />
-              </div>
-              <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20 max-w-md">
-                <p className="text-sm flex items-start gap-2 text-left">
-                  <Info className="w-4 h-4 mt-0.5 shrink-0 text-blue-500" />
-                  <span>
-                    <strong>Hidden AP Detection:</strong> Audio frequency and beep rate will increase as you move closer to the <strong>Aruba Access Point</strong>. This is specifically designed for finding hardware hidden inside walls or above ceilings.
-                  </span>
-                </p>
-              </div>
+          <CardContent className="py-8 space-y-8 text-center">
+            <div className="text-6xl font-bold font-headline mb-4">
+              {Math.round(currentSignal)}
+              <span className="text-xl ml-1 text-muted-foreground">dBm</span>
             </div>
+            <Progress value={getSignalPercent(currentSignal)} className="h-4 max-w-md mx-auto" />
+            <p className="text-sm text-muted-foreground mt-4">
+              Beep frequency increases as you approach the <strong>Aruba AP</strong>.
+            </p>
           </CardContent>
         </Card>
       ) : (
         <>
-          <Card className="glass border-none">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row gap-4 items-end">
-                <div className="flex-1 space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center">
-                    <MapPin className="w-3 h-3 mr-1" /> Scan Location
-                  </label>
-                  <Input 
-                    placeholder="e.g., Floor 1, Conference Room A" 
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="bg-background/50 border-border"
-                  />
-                </div>
-                <Button 
-                  onClick={startScan} 
-                  disabled={isScanning}
-                  className="gradient-blue-cyan border-none h-10 px-8 shadow-lg shadow-blue-500/20"
-                >
-                  {isScanning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
-                  {isScanning ? "Scanning..." : "Start Network Scan"}
-                </Button>
+          {/* Current Connection Header */}
+          {currentConnection && (
+            <div className="bg-secondary/40 p-4 rounded-xl border-l-4 border-primary space-y-1">
+              <p className="text-primary text-xs font-bold uppercase tracking-widest">Current connection</p>
+              <div className="flex justify-between items-baseline">
+                <h3 className="text-lg font-bold font-headline">{currentConnection.ssid} ({currentConnection.macAddress})</h3>
+                <span className="text-xs font-mono text-blue-400">{currentConnection.ipAddress}</span>
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex gap-4 text-xs font-medium">
+                <span className={getSignalColor(currentConnection.signalStrength)}>{currentConnection.signalStrength}dBm</span>
+                <span>CH <span className="text-blue-400">{currentConnection.channel}</span> {currentConnection.frequencyMHz}MHz</span>
+                <span className="text-cyan-400">{currentConnection.distance}</span>
+                <span className="text-blue-500 font-bold">{currentConnection.bandwidthMbps}Mbps</span>
+              </div>
+            </div>
+          )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <Card className="lg:col-span-3 glass border-none overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-headline">Discovery Results</CardTitle>
-                  <CardDescription>Live CAF network mapping (Aruba Infrastructure focus)</CardDescription>
-                </div>
-                {isScanning && (
-                  <div className="flex items-center text-xs text-blue-500 animate-pulse font-bold">
-                    <RefreshCw className="w-3 h-3 mr-1 animate-spin" /> LIVE UPDATING
-                  </div>
-                )}
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader className="bg-muted/30">
-                      <TableRow>
-                        <TableHead>SSID</TableHead>
-                        <TableHead>Vendor</TableHead>
-                        <TableHead>Signal Strength</TableHead>
-                        <TableHead>Channel</TableHead>
-                        <TableHead>Clients</TableHead>
-                        <TableHead className="text-right">Discovery Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {networks.map((network) => (
-                        <TableRow key={network.id} className="hover:bg-muted/20 transition-colors">
-                          <TableCell className="font-bold">
-                            <div>{network.ssid}</div>
-                            <div className="text-[10px] text-muted-foreground font-mono">{network.macAddress}</div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="font-medium bg-blue-500/5 text-blue-500/80 border-blue-500/20">
-                              {network.vendor || 'Aruba'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className={`font-mono font-bold ${getSignalColor(network.signalStrength)}`}>
-                            {network.signalStrength} dBm
-                          </TableCell>
-                          <TableCell className="font-mono">{network.channel}</TableCell>
-                          <TableCell>{network.clientsConnected}</TableCell>
-                          <TableCell className="text-right">
-                            <Button 
-                              variant="secondary" 
-                              size="sm" 
-                              onClick={() => setTrackingNetwork(network)} 
-                              className="text-primary hover:bg-primary/20 border border-primary/20 font-bold"
-                            >
-                              <Crosshair className="w-4 h-4 mr-2" /> Locate AP
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Warning Banner */}
+          <div className="flex items-center gap-2 p-3 bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg text-xs font-bold justify-center">
+            <X className="w-4 h-4" /> Wi-Fi scan throttling is enabled
+          </div>
 
-            <Card className="glass border-none flex flex-col">
-              <CardHeader>
-                <CardTitle className="text-lg font-headline flex items-center gap-2">
-                  <Wand2 className="w-5 h-5 text-cyan-500" /> AI Optimizer
-                </CardTitle>
-                <CardDescription>Performance recommendations</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col justify-center gap-4">
-                {!aiResult ? (
-                  <div className="text-center space-y-4">
-                    <div className="p-6 rounded-2xl bg-muted/30 border border-dashed border-border flex flex-col items-center">
-                      <Radio className="w-8 h-8 text-muted-foreground mb-2" />
-                      <p className="text-xs text-muted-foreground">Scan data ready for analysis.</p>
+          <div className="flex flex-col md:flex-row gap-4 items-end glass p-4 rounded-xl">
+            <div className="flex-1 space-y-2 w-full">
+              <label className="text-xs font-bold uppercase text-muted-foreground flex items-center">
+                <MapPin className="w-3 h-3 mr-1" /> Scan Location
+              </label>
+              <Input 
+                placeholder="e.g., Floor 1, Office A" 
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="bg-background/50"
+              />
+            </div>
+            <Button onClick={startScan} disabled={isScanning} className="gradient-blue-cyan h-10 px-8 w-full md:w-auto">
+              {isScanning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
+              {isScanning ? "Scanning..." : "Start Scan"}
+            </Button>
+          </div>
+
+          {/* Network List Items */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-2">
+              <h4 className="text-xs font-bold uppercase text-muted-foreground">Nearby Access Points</h4>
+              {isScanning && <div className="text-[10px] text-blue-500 animate-pulse font-bold">LIVE SCANNING...</div>}
+            </div>
+            
+            <div className="space-y-0.5">
+              {networks.map((network) => (
+                <div key={network.id} className="bg-card/30 hover:bg-card/50 transition-colors border-b border-border p-4 first:rounded-t-xl last:rounded-b-xl">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm">{network.ssid}</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">({network.macAddress})</span>
+                      </div>
+                      <div className="flex gap-3 text-[11px] font-mono">
+                        <span className={`font-bold ${getSignalColor(network.signalStrength)}`}>{network.signalStrength}dBm</span>
+                        <span>CH <span className="text-blue-400">{network.channel}</span> {network.frequencyMHz}MHz</span>
+                        <span className="text-cyan-400">{network.distance}</span>
+                      </div>
                     </div>
                     <Button 
-                      onClick={handleAiOptimize} 
-                      disabled={isOptimizing}
-                      variant="outline"
-                      className="w-full border-cyan-500/30 text-cyan-500 hover:bg-cyan-500/10"
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setTrackingNetwork(network)} 
+                      className="h-8 px-2 text-[10px] font-bold text-primary border border-primary/20 hover:bg-primary/10"
                     >
-                      {isOptimizing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : "Run AI Analysis"}
+                      <Crosshair className="w-3.5 h-3.5 mr-1" /> LOCATE
                     </Button>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
-                      <h4 className="text-xs font-bold text-cyan-500 uppercase mb-2">Health Summary</h4>
-                      <p className="text-sm line-clamp-4">{aiResult.summary}</p>
+
+                  <div className="flex items-center gap-4">
+                    {/* Signal Icon */}
+                    <div className="w-10 h-10 flex items-center justify-center relative">
+                      <Wifi className={`w-8 h-8 ${getSignalColor(network.signalStrength)}`} />
+                      <div className="absolute bottom-0 right-0">
+                        {network.encryption.includes('WPA') ? <Lock className="w-3 h-3 text-muted-foreground" /> : null}
+                      </div>
+                      <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-secondary px-1 rounded">{network.channel}</span>
                     </div>
-                    <div className="space-y-2">
-                      <h4 className="text-xs font-bold text-muted-foreground uppercase">Key Recommendations</h4>
-                      {aiResult.recommendations.slice(0, 2).map((rec, i) => (
-                        <div key={i} className="text-xs p-2 rounded bg-muted/50 border border-border">
-                          <span className="font-bold text-primary mr-1">[{rec.priority}]</span> {rec.category}
-                        </div>
-                      ))}
+
+                    <div className="flex-1 space-y-1">
+                      <div className="flex justify-between text-[10px] uppercase font-bold">
+                        <span className="text-cyan-400">{network.frequencyRange}</span>
+                        <span className="text-muted-foreground truncate max-w-[120px]">{network.vendor}</span>
+                      </div>
+                      <div className="text-[10px] font-mono text-muted-foreground/80">
+                        {network.encryption}
+                      </div>
                     </div>
-                    <Button onClick={() => setAiResult(null)} variant="ghost" className="w-full text-xs">Clear Results</Button>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+              ))}
+            </div>
           </div>
+
+          {/* AI Insights Sidebar */}
+          <Card className="glass border-none gradient-card-purple">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-headline flex items-center gap-2">
+                <Wand2 className="w-4 h-4 text-purple-500" /> AI Insights
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!aiResult ? (
+                <Button onClick={handleAiOptimize} disabled={isOptimizing} variant="outline" className="w-full text-xs">
+                  {isOptimizing ? "Analyzing..." : "Analyze Scan Data"}
+                </Button>
+              ) : (
+                <div className="space-y-2 text-xs">
+                  <p className="bg-purple-500/10 p-2 rounded">{aiResult.summary}</p>
+                  <Button onClick={() => setAiResult(null)} variant="ghost" className="w-full h-6 text-[10px]">Clear</Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </>
       )}
     </div>
