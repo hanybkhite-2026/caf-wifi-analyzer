@@ -1,8 +1,17 @@
 "use client";
 
-import { LayoutDashboard, Radio, BarChart3, FileText, ShieldCheck, Settings, Wifi } from "lucide-react";
+import { 
+  Radio, 
+  Signal, 
+  LayoutDashboard, 
+  LineChart, 
+  FileUp, 
+  Users, 
+  Settings, 
+  Info,
+  Wifi 
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 interface SidebarNavProps {
   activeTab: string;
@@ -11,12 +20,14 @@ interface SidebarNavProps {
 
 export function SidebarNav({ activeTab, setActiveTab }: SidebarNavProps) {
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "scanner", label: "Scanner", icon: Radio },
-    { id: "analytics", label: "Analytics", icon: BarChart3 },
-    { id: "reports", label: "Reports", icon: FileText },
-    { id: "admin", label: "Admin", icon: ShieldCheck },
+    { id: "access-points", label: "Access Points", icon: Radio },
+    { id: "channel-rating", label: "Channel Rating", icon: Signal },
+    { id: "channel-graph", label: "Channel Graph", icon: LayoutDashboard },
+    { id: "time-graph", label: "Time Graph", icon: LineChart },
+    { id: "export", label: "Export", icon: FileUp },
+    { id: "vendors", label: "Vendors", icon: Users },
     { id: "settings", label: "Settings", icon: Settings },
+    { id: "about", label: "About", icon: Info },
   ];
 
   return (
@@ -30,7 +41,7 @@ export function SidebarNav({ activeTab, setActiveTab }: SidebarNavProps) {
         </div>
       </div>
 
-      <nav className="flex-1 py-6 px-3 space-y-2">
+      <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => (
           <button
             key={item.id}
@@ -50,10 +61,10 @@ export function SidebarNav({ activeTab, setActiveTab }: SidebarNavProps) {
 
       <div className="p-4 mt-auto">
         <div className="bg-gradient-to-br from-blue-600/20 to-cyan-500/20 rounded-2xl p-4 border border-blue-500/20 hidden lg:block">
-          <p className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1">Enterprise Pro</p>
-          <p className="text-sm text-foreground mb-3">v3.0.0 Global Deployment</p>
+          <p className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1">Aruba Systems</p>
+          <p className="text-sm text-foreground mb-3">v3.0.0 Enterprise</p>
           <div className="h-1 w-full bg-secondary rounded-full overflow-hidden">
-            <div className="h-full bg-blue-500 w-3/4" />
+            <div className="h-full bg-blue-500 w-full" />
           </div>
         </div>
       </div>
