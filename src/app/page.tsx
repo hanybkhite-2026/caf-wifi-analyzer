@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { Header } from '@/components/layout/header';
 import { DashboardTab } from '@/components/dashboard/dashboard-tab';
@@ -12,13 +12,25 @@ import { SettingsTab } from '@/components/settings/settings-tab';
 import { AboutTab } from '@/components/about/about-tab';
 import { ChannelRatingTab } from '@/components/dashboard/channel-rating-tab';
 
+/**
+ * CAFWiFiAnalyzer - Final Enterprise V3.0.0
+ * The main entry point for the WiFi Analysis Infrastructure.
+ */
 export default function CAFWiFiAnalyzer() {
   const [activeTab, setActiveTab] = useState('access-points');
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
 
+  // Sync theme with document class for Tailwind dark mode
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
-    document.documentElement.classList.toggle('dark');
   };
 
   const renderContent = () => {
@@ -46,7 +58,7 @@ export default function CAFWiFiAnalyzer() {
 
   return (
     <div className={`flex min-h-screen ${theme === 'dark' ? 'dark bg-[#0f172a]' : 'bg-slate-50'}`}>
-      {/* Fixed Sidebar */}
+      {/* Fixed Sidebar for Enterprise Navigation */}
       <SidebarNav activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Content Area */}
@@ -59,7 +71,7 @@ export default function CAFWiFiAnalyzer() {
           </div>
         </main>
 
-        {/* Status Bar */}
+        {/* Enterprise Status Bar */}
         <footer className="h-8 border-t border-border bg-card/30 flex items-center justify-between px-6 text-[10px] font-mono tracking-widest uppercase text-muted-foreground shrink-0">
           <div className="flex gap-6">
             <span>SYSTEM: v3.0.0-PROD</span>
