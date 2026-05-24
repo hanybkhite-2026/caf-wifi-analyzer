@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Wifi, Loader2, AlertCircle } from "lucide-react";
+import { Wifi, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { doc, setDoc } from 'firebase/firestore';
 
@@ -62,24 +62,22 @@ export default function LoginPage() {
           createdAt: new Date().toISOString()
         };
 
-        try {
-          await setDoc(userRef, userData);
-        } catch (dbError: any) {
-          // If Firestore fails (e.g. security rules), we still have the Auth account
-          // but we emit the error for the listener
-          if (dbError.code === 'permission-denied') {
-            const permissionError = new FirestorePermissionError({
-              path: userRef.path,
-              operation: 'create',
-              requestResourceData: userData,
-            });
-            errorEmitter.emit('permission-error', permissionError);
-          }
-        }
+        // Mutation without await for non-blocking local cache update
+        setDoc(userRef, userData, { merge: true })
+          .catch(async (dbError: any) => {
+            if (dbError.code === 'permission-denied') {
+              const permissionError = new FirestorePermissionError({
+                path: userRef.path,
+                operation: 'create',
+                requestResourceData: userData,
+              });
+              errorEmitter.emit('permission-error', permissionError);
+            }
+          });
 
         toast({ 
           title: "Registration Successful", 
-          description: "Your admin account has been created and profile stored." 
+          description: "Your admin account has been created." 
         });
       } else {
         await signInWithEmailAndPassword(auth, email, password);
@@ -89,23 +87,29 @@ export default function LoginPage() {
         });
       }
     } catch (error: any) {
-      console.error("Auth Error:", error);
-      let message = error.message || "An unexpected error occurred.";
+      console.error("Authentication Error Details:", error);
       
-      // Handle specific Firebase Auth error codes
+      let title = "Authentication Error";
+      let message = error.message || "An unexpected error occurred.";
+
       if (error.code === 'auth/api-key-not-valid') {
-        message = "The Firebase API key is invalid. Please check your config.ts or environment variables.";
+        title = "Invalid Configuration";
+        message = "The Firebase API key is reported as invalid. Please ensure the 'studio-80326841e-b8f17' project has Auth enabled and the API key is active.";
       } else if (error.code === 'auth/user-not-found') {
-        message = "No account found with this email.";
+        message = "No account found with this email. Please Register first.";
       } else if (error.code === 'auth/wrong-password') {
         message = "Incorrect password.";
       } else if (error.code === 'auth/email-already-in-use') {
-        message = "This email address is already in use.";
+        message = "This email address is already in use. Try signing in.";
+      } else if (error.code === 'auth/invalid-email') {
+        message = "Please enter a valid email address.";
+      } else if (error.code === 'auth/weak-password') {
+        message = "Password should be at least 6 characters.";
       }
       
       toast({
         variant: "destructive",
-        title: "Authentication Error",
+        title: title,
         description: message,
       });
     } finally {
@@ -123,12 +127,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+      {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent rounded-full blur-[120px]" />
       </div>
 
-      <Card className="w-full max-w-md glass border-none shadow-2xl z-10">
+      <Card className="w-full max-w-md glass border-none shadow-2xl z-10 animate-in fade-in zoom-in duration-500">
         <CardHeader className="text-center space-y-4">
           <div className="w-16 h-16 rounded-2xl gradient-blue-cyan flex items-center justify-center mx-auto shadow-xl">
             <Wifi className="text-white w-8 h-8" />
@@ -165,15 +170,20 @@ export default function LoginPage() {
               />
             </div>
 
-            {!isRegistering && (
+            {isRegistering ? (
+              <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg text-primary border border-primary/20 text-xs font-medium animate-in slide-in-from-top-2">
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                <p>Registering as an <strong>Administrator</strong> for this facility.</p>
+              </div>
+            ) : (
               <div className="flex items-center gap-2 p-3 bg-blue-500/10 rounded-lg text-blue-500 border border-blue-500/20 text-xs font-medium">
                 <AlertCircle className="w-4 h-4 shrink-0" />
-                <p>New here? Toggle <strong>Register as Admin</strong> below to create your account.</p>
+                <p>First time? Switch to <strong>Register</strong> to create your admin user.</p>
               </div>
             )}
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full gradient-blue-cyan h-11" disabled={isLoading}>
+            <Button type="submit" className="w-full gradient-blue-cyan h-11 shadow-lg shadow-blue-500/20" disabled={isLoading}>
               {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               {isRegistering ? "Create Admin Account" : "Sign In"}
             </Button>
