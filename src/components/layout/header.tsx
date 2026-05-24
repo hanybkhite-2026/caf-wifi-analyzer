@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Moon, Sun, Bell, UserCircle } from "lucide-react";
+import { Moon, Sun, Bell, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
@@ -31,9 +31,9 @@ export function Header({ theme, toggleTheme, activeTab }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground text-xs font-medium border border-border">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          Aruba Engine: Online
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 text-blue-500 text-xs font-medium border border-blue-500/20">
+          <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+          Aruba Analysis: Public Access
         </div>
         
         <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full">
@@ -44,9 +44,9 @@ export function Header({ theme, toggleTheme, activeTab }: HeaderProps) {
           <Bell className="h-5 w-5" />
         </Button>
         
-        <div className="flex items-center gap-2 ml-2 px-3 py-1 bg-secondary/50 rounded-full border border-border">
-          <UserCircle className="h-4 w-4 text-muted-foreground" />
-          <span className="text-xs font-medium">Guest Mode</span>
+        <div className="flex items-center gap-2 ml-2 px-3 py-1 bg-green-500/10 text-green-500 rounded-full border border-green-500/20">
+          <ShieldCheck className="h-4 w-4" />
+          <span className="text-xs font-bold uppercase tracking-wider">Operational</span>
         </div>
       </div>
     </header>
