@@ -2,7 +2,7 @@
 
 /**
  * Firebase configuration object.
- * Hardcoded with the credentials for project 'studio-80326841e-b8f17'.
+ * Explicitly hardcoded with project 'studio-80326841e-b8f17' credentials.
  */
 export const firebaseConfig = {
   apiKey: "AIzaSyBwYlVyw8HVfvVbkSC4Dnrsw4Z3DG5PBRk",
