@@ -10,7 +10,8 @@ import {
 import { 
   Wifi, Sun, Moon, Settings, BarChart3, Network, TrendingUp, 
   Activity, Zap, Volume2, VolumeX, LogOut, Mail, Lock, 
-  Globe, Gauge, ShieldCheck, Search, Filter, Info, ChevronRight, Play, Loader2, Crosshair, X
+  Globe, Gauge, ShieldCheck, Search, Filter, Info, ChevronRight, Play, Loader2, Crosshair, X,
+  Signal, FileText
 } from 'lucide-react';
 
 export default function CAFWiFiAnalyzer() {
@@ -332,9 +333,9 @@ export default function CAFWiFiAnalyzer() {
                   <p className="text-xs text-gray-500">Real-time channel congestion metrics</p>
                 </div>
                 <div className="flex bg-dark-900 p-1 rounded-xl">
-                  {['2.4GHz', '5GHz'].map(band => (
+                  {(['2.4GHz', '5GHz'] as const).map(band => (
                     <button
-                      key={band} onClick={() => setSelectedBand(band as any)}
+                      key={band} onClick={() => setSelectedBand(band)}
                       className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedBand === band ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500'}`}
                     >
                       {band}
