@@ -50,17 +50,6 @@ export default function CAFWiFiAnalyzer() {
   const [isScanning, setIsScanning] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
 
-  // Tabs Configuration
-  const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { id: 'spectrum', label: 'Spectrum', icon: TrendingUp },
-    { id: 'scanner', label: 'Scanner', icon: Network },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-    { id: 'reports', label: 'Reports', icon: Activity },
-    { id: 'admin', label: 'Admin', icon: Settings },
-    { id: 'settings', label: 'Settings', icon: Zap }
-  ];
-
   // Initialize client-side values after hydration
   useEffect(() => {
     setSpeedTest(prev => ({ ...prev, timestamp: new Date().toLocaleString() }));
@@ -379,7 +368,15 @@ export default function CAFWiFiAnalyzer() {
 
         <nav className="border-t border-dark-700 bg-dark-900/50 overflow-x-auto no-scrollbar">
           <div className="max-w-7xl mx-auto px-6 flex gap-6">
-            {tabs.map(tab => (
+            {[
+              { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+              { id: 'spectrum', label: 'Spectrum', icon: TrendingUp },
+              { id: 'scanner', label: 'Scanner', icon: Network },
+              { id: 'analytics', label: 'Analytics', icon: Activity },
+              { id: 'reports', label: 'Reports', icon: FileText },
+              { id: 'admin', label: 'Admin', icon: Settings },
+              { id: 'settings', label: 'Settings', icon: Zap }
+            ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
