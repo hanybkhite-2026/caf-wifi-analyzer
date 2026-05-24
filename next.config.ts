@@ -1,21 +1,19 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  experimental: {
-    optimizeCss: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // This is required for the preview environment to allow cross-origin requests
-  allowedDevOrigins: [
-    '6000-firebase-studio-1779618280680.cluster-yy7ncoxb5zd4ouvntrhoc3go3k.cloudworkstations.dev',
-    '*.cloudworkstations.dev'
-  ],
+  experimental: {
+    allowedDevOrigins: [
+      '6000-firebase-studio-1779618280680.cluster-yy7ncoxb5zd4ouvntrhoc3go3k.cloudworkstations.dev',
+      '*.cloudworkstations.dev'
+    ],
+  },
   images: {
     remotePatterns: [
       {
