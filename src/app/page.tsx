@@ -15,7 +15,6 @@ import { SettingsTab } from "@/components/settings/settings-tab";
 import { AboutTab } from "@/components/about/about-tab";
 import { ChannelRatingTab } from "@/components/dashboard/channel-rating-tab";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
-import { Toaster } from "@/components/ui/toaster";
 import { Loader2 } from "lucide-react";
 
 export default function Home() {
@@ -91,7 +90,6 @@ export default function Home() {
           </Tabs>
         </main>
       </div>
-      <Toaster />
     </div>
   );
 }

@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -33,8 +34,8 @@ export default function LoginPage() {
     if (!auth || !db) {
       toast({
         variant: "destructive",
-        title: "System Error",
-        description: "Firebase services are still initializing. Please wait a moment.",
+        title: "Initialization Error",
+        description: "Firebase services are not available yet. Please refresh the page.",
       });
       return;
     }
@@ -45,49 +46,54 @@ export default function LoginPage() {
       if (isRegistering) {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         
-        // Update display name for the auth profile
         await updateProfile(userCredential.user, {
           displayName: 'Admin User'
         });
 
-        // Create user profile in Firestore
-        await setDoc(doc(db, 'users', userCredential.user.uid), {
+        const userRef = doc(db, 'users', userCredential.user.uid);
+        const userData = {
           uid: userCredential.user.uid,
           email: email,
           displayName: 'Admin User',
           role: 'admin',
           createdAt: new Date().toISOString()
+        };
+
+        // Mutation without await as per guidelines
+        setDoc(userRef, userData).catch(async (error) => {
+          const permissionError = new FirestorePermissionError({
+            path: userRef.path,
+            operation: 'create',
+            requestResourceData: userData,
+          });
+          errorEmitter.emit('permission-error', permissionError);
         });
 
         toast({ 
           title: "Account Created", 
-          description: "Welcome! Your admin account is ready." 
+          description: "Welcome! Your admin account has been created." 
         });
       } else {
         await signInWithEmailAndPassword(auth, email, password);
         toast({ 
           title: "Welcome Back", 
-          description: "Authentication successful." 
+          description: "Sign in successful." 
         });
       }
-      // Router push is handled by useEffect on auth state change
     } catch (error: any) {
-      console.error('Auth Error:', error);
-      let message = "Please check your credentials or network connection.";
+      let message = error.message || "An unexpected error occurred.";
       
       if (error.code === 'auth/user-not-found') {
-        message = "No account found. Use 'Register as Admin' below to create one.";
+        message = "No account found. Please register first.";
       } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        message = "Incorrect email or password. Please try again.";
+        message = "Incorrect email or password.";
       } else if (error.code === 'auth/email-already-in-use') {
-        message = "An account already exists with this email. Try signing in.";
-      } else if (error.code === 'auth/weak-password') {
-        message = "Password should be at least 6 characters.";
+        message = "This email is already registered.";
       }
       
       toast({
         variant: "destructive",
-        title: "Access Denied",
+        title: "Authentication Failed",
         description: message,
       });
     } finally {
@@ -105,7 +111,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
-      {/* Background decoration */}
       <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent rounded-full blur-[120px]" />
@@ -149,21 +154,21 @@ export default function LoginPage() {
             </div>
 
             {!isRegistering && (
-              <div className="flex items-center gap-2 p-3 bg-blue-500/10 rounded-lg text-blue-500 border border-blue-500/20 text-xs">
+              <div className="flex items-center gap-2 p-3 bg-blue-500/10 rounded-lg text-blue-500 border border-blue-500/20 text-xs font-medium">
                 <AlertCircle className="w-4 h-4 shrink-0" />
-                <p>If this is your first time, please use the <strong>Register</strong> option below.</p>
+                <p>New here? Use the <strong>Register</strong> option below to create an admin account.</p>
               </div>
             )}
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full gradient-blue-cyan h-11" disabled={isLoading}>
-              {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               {isRegistering ? "Create Admin Account" : "Sign In"}
             </Button>
             <Button
               type="button"
               variant="ghost"
-              className="text-xs"
+              className="text-xs hover:bg-transparent hover:underline"
               onClick={() => setIsRegistering(!isRegistering)}
             >
               {isRegistering ? "Already have an account? Sign In" : "Need an account? Register as Admin"}
