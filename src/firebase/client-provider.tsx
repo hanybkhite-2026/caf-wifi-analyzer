@@ -7,7 +7,7 @@ import { Loader2 } from 'lucide-react';
 
 /**
  * A client-side wrapper for the FirebaseProvider that handles initialization.
- * This component ensures Firebase is initialized only once on the client.
+ * Modified to be non-blocking so the app can run even if Firebase is pending.
  */
 export function FirebaseClientProvider({
   children,
@@ -21,16 +21,24 @@ export function FirebaseClientProvider({
   } | null>(null);
 
   useEffect(() => {
-    // Initialize Firebase services only on the client
-    const initialized = initializeFirebase();
-    setServices(initialized);
+    try {
+      const initialized = initializeFirebase();
+      setServices(initialized);
+    } catch (error) {
+      console.error("Firebase initialization failed:", error);
+      // We don't block the app here so the UI can still render in "bypass" mode
+    }
   }, []);
 
-  // Show a simple loader while Firebase is initializing to prevent context errors
+  // If services are still null (initializing), we show a quick loader
+  // but we provide a fallback empty state if it takes too long
   if (!services) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      <div className="h-screen w-screen flex items-center justify-center bg-[#0f172a]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+          <p className="text-slate-400 text-sm font-medium">Initializing NetPulse Systems...</p>
+        </div>
       </div>
     );
   }

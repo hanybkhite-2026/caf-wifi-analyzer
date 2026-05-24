@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -44,28 +43,28 @@ export default function Home() {
         
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsContent value="access-points" className="mt-0 outline-none">
+            <TabsContent value="access-points" className="mt-0 outline-none focus-visible:ring-0">
               <ScannerTab />
             </TabsContent>
-            <TabsContent value="channel-rating" className="mt-0 outline-none">
+            <TabsContent value="channel-rating" className="mt-0 outline-none focus-visible:ring-0">
               <ChannelRatingTab />
             </TabsContent>
-            <TabsContent value="channel-graph" className="mt-0 outline-none">
+            <TabsContent value="channel-graph" className="mt-0 outline-none focus-visible:ring-0">
               <DashboardTab />
             </TabsContent>
-            <TabsContent value="time-graph" className="mt-0 outline-none">
+            <TabsContent value="time-graph" className="mt-0 outline-none focus-visible:ring-0">
               <AnalyticsTab />
             </TabsContent>
-            <TabsContent value="export" className="mt-0 outline-none">
+            <TabsContent value="export" className="mt-0 outline-none focus-visible:ring-0">
               <ReportsTab />
             </TabsContent>
-            <TabsContent value="vendors" className="mt-0 outline-none">
+            <TabsContent value="vendors" className="mt-0 outline-none focus-visible:ring-0">
               <AdminTab />
             </TabsContent>
-            <TabsContent value="settings" className="mt-0 outline-none">
+            <TabsContent value="settings" className="mt-0 outline-none focus-visible:ring-0">
               <SettingsTab theme={theme} toggleTheme={toggleTheme} />
             </TabsContent>
-            <TabsContent value="about" className="mt-0 outline-none">
+            <TabsContent value="about" className="mt-0 outline-none focus-visible:ring-0">
               <AboutTab />
             </TabsContent>
           </Tabs>
