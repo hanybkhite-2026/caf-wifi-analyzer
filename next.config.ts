@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
         '*.cloudworkstations.dev'
       ],
     },
+    // Explicitly allow the workstation origin for dev resources as suggested by the server logs
+    // @ts-ignore - experimental property for cloud environments
+    allowedDevOrigins: [
+      '6000-firebase-studio-1779618280680.cluster-yy7ncoxb5zd4ouvntrhoc3go3k.cloudworkstations.dev',
+      '*.cloudworkstations.dev'
+    ]
   },
   images: {
     remotePatterns: [
