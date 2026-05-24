@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -24,8 +25,6 @@ export function ScannerTab() {
   const [currentSignal, setCurrentSignal] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const oscillatorRef = useRef<OscillatorNode | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const { toast } = useToast();
@@ -85,9 +84,6 @@ export function ScannerTab() {
         osc.stop(audioContextRef.current.currentTime + 0.1);
       };
 
-      // Interval speed based on signal strength
-      // Strong signal (-30) = fast beeps
-      // Weak signal (-90) = slow beeps
       const updateInterval = () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
         
@@ -106,9 +102,6 @@ export function ScannerTab() {
       updateInterval();
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-        // We don't necessarily want to close it, just stop the beeps
-      }
     }
 
     return () => {
@@ -141,7 +134,7 @@ export function ScannerTab() {
             <div>
               <CardTitle className="text-2xl font-headline flex items-center gap-2">
                 <Crosshair className="w-6 h-6 text-primary animate-pulse" />
-                Locating: {trackingNetwork.ssid}
+                Locating Hidden AP: {trackingNetwork.ssid}
               </CardTitle>
               <CardDescription className="flex items-center gap-2">
                 <Badge variant="secondary">{trackingNetwork.vendor || 'Aruba Networks'}</Badge>
@@ -149,10 +142,10 @@ export function ScannerTab() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => setIsMuted(!isMuted)}>
+              <Button variant="ghost" size="icon" onClick={() => setIsMuted(!isMuted)} title={isMuted ? "Unmute" : "Mute"}>
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </Button>
-              <Button variant="ghost" size="icon" onClick={stopTracking}>
+              <Button variant="ghost" size="icon" onClick={stopTracking} title="Close Tracker">
                 <X className="w-5 h-5" />
               </Button>
             </div>
@@ -168,7 +161,7 @@ export function ScannerTab() {
               </div>
               <div className="w-full max-w-md space-y-2">
                 <div className="flex justify-between text-xs font-bold uppercase">
-                  <span>Proximity</span>
+                  <span>Proximity Signal</span>
                   <span>{Math.round(getSignalPercent(currentSignal))}%</span>
                 </div>
                 <Progress value={getSignalPercent(currentSignal)} className="h-4" />
@@ -177,7 +170,7 @@ export function ScannerTab() {
                 <p className="text-sm flex items-start gap-2 text-left">
                   <Info className="w-4 h-4 mt-0.5 shrink-0 text-blue-500" />
                   <span>
-                    Audio frequency and beep rate will increase as you move closer to the <strong>Aruba Access Point</strong>. Use this to locate hidden devices behind walls or ceilings.
+                    <strong>Hidden AP Detection:</strong> Audio frequency and beep rate will increase as you move closer to the <strong>Aruba Access Point</strong>. This is specifically designed for finding hardware hidden inside walls or above ceilings.
                   </span>
                 </p>
               </div>
@@ -217,7 +210,7 @@ export function ScannerTab() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-lg font-headline">Discovery Results</CardTitle>
-                  <CardDescription>Live real-time CAF network mapping (Aruba Infrastructure)</CardDescription>
+                  <CardDescription>Live CAF network mapping (Aruba Infrastructure focus)</CardDescription>
                 </div>
                 {isScanning && (
                   <div className="flex items-center text-xs text-blue-500 animate-pulse font-bold">
@@ -235,7 +228,7 @@ export function ScannerTab() {
                         <TableHead>Signal Strength</TableHead>
                         <TableHead>Channel</TableHead>
                         <TableHead>Clients</TableHead>
-                        <TableHead className="text-right">Action</TableHead>
+                        <TableHead className="text-right">Discovery Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -256,7 +249,12 @@ export function ScannerTab() {
                           <TableCell className="font-mono">{network.channel}</TableCell>
                           <TableCell>{network.clientsConnected}</TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="sm" onClick={() => setTrackingNetwork(network)} className="text-primary hover:text-primary hover:bg-primary/10">
+                            <Button 
+                              variant="secondary" 
+                              size="sm" 
+                              onClick={() => setTrackingNetwork(network)} 
+                              className="text-primary hover:bg-primary/20 border border-primary/20 font-bold"
+                            >
                               <Crosshair className="w-4 h-4 mr-2" /> Locate AP
                             </Button>
                           </TableCell>
@@ -273,7 +271,7 @@ export function ScannerTab() {
                 <CardTitle className="text-lg font-headline flex items-center gap-2">
                   <Wand2 className="w-5 h-5 text-cyan-500" /> AI Optimizer
                 </CardTitle>
-                <CardDescription>Get performance recommendations</CardDescription>
+                <CardDescription>Performance recommendations</CardDescription>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col justify-center gap-4">
                 {!aiResult ? (

@@ -1,14 +1,35 @@
+
 "use client";
 
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { TEAM_MEMBERS } from "@/lib/mock-data";
-import { UserPlus, ShieldAlert, BarChart, MoreVertical, CheckCircle2, Clock } from "lucide-react";
+import { TEAM_MEMBERS as INITIAL_MEMBERS } from "@/lib/mock-data";
+import { UserPlus, ShieldAlert, BarChart, MoreVertical, CheckCircle2, Clock, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function AdminTab() {
+  const [members, setMembers] = useState(INITIAL_MEMBERS);
+  const { toast } = useToast();
+
+  const handleRemoveMember = (id: string, name: string) => {
+    setMembers(members.filter(m => m.id !== id));
+    toast({
+      title: "Member Removed",
+      description: `${name} has been removed from the organization.`,
+      variant: "destructive",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -81,7 +102,7 @@ export function AdminTab() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {TEAM_MEMBERS.map((member) => (
+              {members.map((member) => (
                 <TableRow key={member.id} className="hover:bg-muted/10 transition-colors">
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -112,10 +133,26 @@ export function AdminTab() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer" onClick={() => handleRemoveMember(member.id, member.name)}>
+                          <Trash2 className="w-4 h-4 mr-2" /> Remove Member
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
+              {members.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    No team members found.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
