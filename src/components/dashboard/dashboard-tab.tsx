@@ -1,17 +1,20 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { MOCK_NETWORKS } from "@/lib/mock-data";
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, Radar 
+  PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, Radar,
+  CartesianGrid, Legend
 } from 'recharts';
-import { Wifi, Router, Signal, ShieldCheck, Zap } from "lucide-react";
+import { Wifi, Router, Signal, ShieldCheck, Zap, Activity, AlertTriangle } from "lucide-react";
 
 export function DashboardTab() {
-  const signalData = MOCK_NETWORKS.map(n => ({
+  const performanceData = MOCK_NETWORKS.map(n => ({
     name: n.ssid,
     signal: Math.abs(n.signalStrength),
+    bandwidth: n.bandwidthMbps,
+    interference: n.interferenceScore * 10, // Scale for better visibility
   }));
 
   const typeData = [
@@ -58,6 +61,52 @@ export function DashboardTab() {
         ))}
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="glass border-none shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-lg font-headline flex items-center gap-2">
+              <Activity className="w-5 h-5 text-blue-500" /> SSID Bandwidth Distribution
+            </CardTitle>
+            <CardDescription>Throughput capacity across discovered CAF networks (Mbps)</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={performanceData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#333" />
+                <XAxis type="number" stroke="#888" fontSize={12} unit=" Mbps" />
+                <YAxis dataKey="name" type="category" stroke="#888" fontSize={10} width={100} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'rgba(23, 23, 23, 0.9)', border: 'none', borderRadius: '12px' }}
+                />
+                <Bar dataKey="bandwidth" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="glass border-none shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-lg font-headline flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-orange-500" /> Interference Analysis
+            </CardTitle>
+            <CardDescription>Estimated interference impact per SSID (0-100 scale)</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={performanceData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333" />
+                <XAxis dataKey="name" stroke="#888" fontSize={10} />
+                <YAxis stroke="#888" fontSize={12} domain={[0, 100]} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'rgba(23, 23, 23, 0.9)', border: 'none', borderRadius: '12px' }}
+                />
+                <Bar dataKey="interference" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 glass border-none">
           <CardHeader>
@@ -65,14 +114,14 @@ export function DashboardTab() {
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={signalData}>
-                <XAxis dataKey="name" fontSize={12} stroke="#888888" />
-                <YAxis fontSize={12} stroke="#888888" domain={[0, 100]} />
+              <BarChart data={performanceData}>
+                <XAxis dataKey="name" fontSize={10} stroke="#888888" />
+                <YAxis fontSize={12} stroke="#888888" domain={[0, 100]} label={{ value: 'dBm (Abs)', angle: -90, position: 'insideLeft' }} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'rgba(23, 23, 23, 0.8)', border: 'none', borderRadius: '8px' }}
                   itemStyle={{ color: '#ffffff' }}
                 />
-                <Bar dataKey="signal" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="signal" fill="#a855f7" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
