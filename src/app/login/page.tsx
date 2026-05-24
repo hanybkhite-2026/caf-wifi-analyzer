@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from 'react';
-import { useAuth } from '@/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { useState, useEffect } from 'react';
+import { useAuth, useUser } from '@/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Wifi, Loader2 } from "lucide-react";
+import { Wifi, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { doc, setDoc } from 'firebase/firestore';
 
@@ -18,8 +18,15 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const { auth, firestore: db } = useAuth();
+  const { user, loading: authLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/');
+    }
+  }, [user, authLoading, router]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +34,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "System Error",
-        description: "Firebase services are not initialized. Please refresh.",
+        description: "Firebase services are still initializing. Please wait a moment.",
       });
       return;
     }
@@ -37,36 +44,64 @@ export default function LoginPage() {
     try {
       if (isRegistering) {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        
+        // Update display name for the auth profile
+        await updateProfile(userCredential.user, {
+          displayName: 'Admin User'
+        });
+
         // Create user profile in Firestore
         await setDoc(doc(db, 'users', userCredential.user.uid), {
           uid: userCredential.user.uid,
           email: email,
+          displayName: 'Admin User',
           role: 'admin',
           createdAt: new Date().toISOString()
         });
-        toast({ title: "Account created", description: "Welcome to NetPulse CAF." });
+
+        toast({ 
+          title: "Account Created", 
+          description: "Welcome! Your admin account is ready." 
+        });
       } else {
         await signInWithEmailAndPassword(auth, email, password);
-        toast({ title: "Welcome back", description: "Authentication successful." });
+        toast({ 
+          title: "Welcome Back", 
+          description: "Authentication successful." 
+        });
       }
-      router.push('/');
+      // Router push is handled by useEffect on auth state change
     } catch (error: any) {
-      let message = error.message || "Please check your credentials.";
+      console.error('Auth Error:', error);
+      let message = "Please check your credentials or network connection.";
+      
       if (error.code === 'auth/user-not-found') {
-        message = "User not found. Try registering as an admin first.";
-      } else if (error.code === 'auth/wrong-password') {
-        message = "Incorrect password. Please try again.";
+        message = "No account found. Use 'Register as Admin' below to create one.";
+      } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        message = "Incorrect email or password. Please try again.";
+      } else if (error.code === 'auth/email-already-in-use') {
+        message = "An account already exists with this email. Try signing in.";
+      } else if (error.code === 'auth/weak-password') {
+        message = "Password should be at least 6 characters.";
       }
       
       toast({
         variant: "destructive",
-        title: "Authentication Failed",
+        title: "Access Denied",
         description: message,
       });
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
@@ -93,7 +128,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="name@gdit.com"
+                placeholder="hanybkhite@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -105,12 +140,20 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="bg-background/50"
               />
             </div>
+
+            {!isRegistering && (
+              <div className="flex items-center gap-2 p-3 bg-blue-500/10 rounded-lg text-blue-500 border border-blue-500/20 text-xs">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <p>If this is your first time, please use the <strong>Register</strong> option below.</p>
+              </div>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full gradient-blue-cyan h-11" disabled={isLoading}>

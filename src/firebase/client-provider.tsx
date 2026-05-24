@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { initializeFirebase } from './init';
 import { FirebaseProvider } from './provider';
+import { Loader2 } from 'lucide-react';
 
 /**
  * A client-side wrapper for the FirebaseProvider that handles initialization.
@@ -25,10 +26,13 @@ export function FirebaseClientProvider({
     setServices(initialized);
   }, []);
 
-  // Return children as-is if services aren't ready to avoid hydration issues,
-  // but context will be null until initialized.
+  // Show a simple loader while Firebase is initializing to prevent context errors
   if (!services) {
-    return <>{children}</>;
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
