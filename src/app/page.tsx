@@ -21,7 +21,7 @@ import { aiNetworkOptimizer, type AiNetworkOptimizerOutput } from "@/ai/flows/ai
 const MOCK_NETWORKS = [
   { id: '1', ssid: 'CAF-WIFI-5G', signalStrength: -45, channel: 36, clientsConnected: 15, frequencyBand: '5GHz', encryption: 'WPA3', vendor: 'ARUBA', macAddress: '00:0B:86:12:34:56', bandwidthMbps: 850, interferenceScore: 1 },
   { id: '2', ssid: 'CAF-WIFI-2G', signalStrength: -58, channel: 6, clientsConnected: 22, frequencyBand: '2.4GHz', encryption: 'WPA3', vendor: 'ARUBA', macAddress: '00:0B:86:78:90:AB', bandwidthMbps: 150, interferenceScore: 4 },
-  { id: '3', ssid: 'CAF-GUEST', signalStrength: -65, channel: 52, clientsConnected: 8, frequencyBand: '5GHz', encryption: 'WPA2', vendor: 'ARUBA', macAddress: '00:0B:86:CD:EF:01', bandwidthMbps: 300, interferenceScore: 2 },
+  { id: '3', ssid: 'CAF-GUEST', signalStrength: -65, channel: 149, clientsConnected: 8, frequencyBand: '5GHz', encryption: 'WPA2', vendor: 'ARUBA', macAddress: '00:0B:86:CD:EF:01', bandwidthMbps: 300, interferenceScore: 2 },
   { id: '4', ssid: 'CAF-IoT', signalStrength: -70, channel: 1, clientsConnected: 32, frequencyBand: '2.4GHz', encryption: 'WPA2', vendor: 'HUAWEI', macAddress: '7c:1c:f1:25:19:2c', bandwidthMbps: 50, interferenceScore: 8 },
   { id: '5', ssid: 'CAF-ADMIN', signalStrength: -50, channel: 128, clientsConnected: 5, frequencyBand: '5GHz', encryption: 'WPA3-Enterprise', vendor: 'TP-LINK', macAddress: '98:da:c4:26:21:87', bandwidthMbps: 900, interferenceScore: 1 },
   { id: '6', ssid: 'CAF-BACKUP', signalStrength: -72, channel: 11, clientsConnected: 3, frequencyBand: '2.4GHz', encryption: 'WPA3', vendor: 'GENERIC', macAddress: '9e:da:c4:26:21:87', bandwidthMbps: 100, interferenceScore: 5 }
@@ -74,7 +74,7 @@ export default function CAFWiFiAnalyzer() {
 
   // Speed Test State
   const [speedTest, setSpeedTest] = useState({
-    download: 0, upload: 0, ping: 0, testing: false
+    download: 0, upload: 0, ping: 0, testing: false, timestamp: ''
   });
 
   const tabs = [
@@ -88,6 +88,7 @@ export default function CAFWiFiAnalyzer() {
 
   useEffect(() => {
     setIsMounted(true);
+    setSpeedTest(prev => ({ ...prev, timestamp: new Date().toLocaleTimeString() }));
   }, []);
 
   // --- Derived Chart Data ---
@@ -103,11 +104,11 @@ export default function CAFWiFiAnalyzer() {
     interference: n.interferenceScore * 10,
   })), []);
 
-  const typeData = [
+  const typeData = useMemo(() => [
     { name: 'Main', value: 2, color: '#3b82f6' },
     { name: 'Guest', value: 1, color: '#10b981' },
     { name: 'IoT', value: 1, color: '#f59e0b' }
-  ];
+  ], []);
 
   const COLORS = ['#3b82f6', '#06b6d4', '#a855f7', '#10b981', '#f59e0b', '#ec4899'];
 
@@ -133,7 +134,8 @@ export default function CAFWiFiAnalyzer() {
       download: Math.round(Math.random() * 300 + 200),
       upload: Math.round(Math.random() * 100 + 50),
       ping: Math.round((Math.random() * 15 + 5) * 10) / 10,
-      testing: false
+      testing: false,
+      timestamp: new Date().toLocaleTimeString()
     });
   };
 
@@ -321,7 +323,7 @@ export default function CAFWiFiAnalyzer() {
           </div>
         )}
 
-        {/* Spectrum Tab (Gaussian Humps) */}
+        {/* Spectrum Tab */}
         {activeTab === 'spectrum' && (
           <div className="space-y-6">
             <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800">
@@ -418,7 +420,7 @@ export default function CAFWiFiAnalyzer() {
           </div>
         )}
 
-        {/* Analytics Tab (Speed Gauges) */}
+        {/* Analytics Tab */}
         {activeTab === 'analytics' && (
           <div className="space-y-8">
             <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800">
