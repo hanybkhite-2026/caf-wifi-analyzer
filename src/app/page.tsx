@@ -50,6 +50,17 @@ export default function CAFWiFiAnalyzer() {
   const [isScanning, setIsScanning] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
 
+  // Tabs Configuration
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'spectrum', label: 'Spectrum', icon: TrendingUp },
+    { id: 'scanner', label: 'Scanner', icon: Network },
+    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+    { id: 'reports', label: 'Reports', icon: Activity },
+    { id: 'admin', label: 'Admin', icon: Settings },
+    { id: 'settings', label: 'Settings', icon: Zap }
+  ];
+
   // Initialize client-side values after hydration
   useEffect(() => {
     setSpeedTest(prev => ({ ...prev, timestamp: new Date().toLocaleString() }));
