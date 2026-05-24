@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { initializeFirebase } from './init';
 import { FirebaseProvider } from './provider';
 
@@ -14,21 +13,30 @@ export function FirebaseClientProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { firebaseApp, firestore, auth } = useMemo(() => {
-    // Only initialize on the client
-    if (typeof window === 'undefined') {
-      return { firebaseApp: null as any, firestore: null as any, auth: null as any };
-    }
-    return initializeFirebase();
+  const [services, setServices] = useState<{
+    firebaseApp: any;
+    firestore: any;
+    auth: any;
+  } | null>(null);
+
+  useEffect(() => {
+    // Initialize Firebase services only on the client
+    const initialized = initializeFirebase();
+    setServices(initialized);
   }, []);
 
-  // Don't render provider if we're on the server or initialization hasn't happened
-  if (!firebaseApp) {
+  // Return children as-is if services aren't ready to avoid hydration issues,
+  // but context will be null until initialized.
+  if (!services) {
     return <>{children}</>;
   }
 
   return (
-    <FirebaseProvider firebaseApp={firebaseApp} firestore={firestore} auth={auth}>
+    <FirebaseProvider 
+      firebaseApp={services.firebaseApp} 
+      firestore={services.firestore} 
+      auth={services.auth}
+    >
       {children}
     </FirebaseProvider>
   );
