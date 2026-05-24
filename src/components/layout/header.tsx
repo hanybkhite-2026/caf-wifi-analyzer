@@ -1,19 +1,8 @@
 
 "use client";
 
-import { Moon, Sun, Bell, UserCircle, LogOut } from "lucide-react";
+import { Moon, Sun, Bell, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth, useUser } from "@/firebase";
-import { signOut } from "firebase/auth";
-import { useRouter } from "next/navigation";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
   theme: 'light' | 'dark';
@@ -22,17 +11,6 @@ interface HeaderProps {
 }
 
 export function Header({ theme, toggleTheme, activeTab }: HeaderProps) {
-  const { auth } = useAuth();
-  const { user } = useUser();
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    if (auth) {
-      await signOut(auth);
-      router.push('/login');
-    }
-  };
-
   const titles: Record<string, string> = {
     "access-points": "Access Points Discovery",
     "channel-rating": "Channel Ratings & Health",
@@ -66,26 +44,10 @@ export function Header({ theme, toggleTheme, activeTab }: HeaderProps) {
           <Bell className="h-5 w-5" />
         </Button>
         
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <UserCircle className="h-5 w-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>
-              <div className="flex flex-col">
-                <span>{user?.displayName || 'Admin'}</span>
-                <span className="text-[10px] text-muted-foreground">{user?.email}</span>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive cursor-pointer">
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-2 ml-2 px-3 py-1 bg-secondary/50 rounded-full border border-border">
+          <UserCircle className="h-4 w-4 text-muted-foreground" />
+          <span className="text-xs font-medium">Guest Mode</span>
+        </div>
       </div>
     </header>
   );

@@ -2,8 +2,6 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Header } from "@/components/layout/header";
 import { DashboardTab } from "@/components/dashboard/dashboard-tab";
@@ -15,19 +13,10 @@ import { SettingsTab } from "@/components/settings/settings-tab";
 import { AboutTab } from "@/components/about/about-tab";
 import { ChannelRatingTab } from "@/components/dashboard/channel-rating-tab";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
-import { Loader2 } from "lucide-react";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("access-points");
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-  const { user, loading } = useUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
@@ -45,14 +34,6 @@ export default function Home() {
     localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle('dark');
   };
-
-  if (loading || !user) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden font-body">
