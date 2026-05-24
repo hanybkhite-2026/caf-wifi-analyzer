@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, 
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, 
@@ -10,11 +10,14 @@ import {
   Wifi, Sun, Moon, Settings, BarChart3, Network, TrendingUp, 
   Activity, Zap, Volume2, VolumeX, LogOut, Mail, Lock, 
   Globe, Gauge, Loader2, Eye, EyeOff, Signal, Router, 
-  ShieldCheck, Crosshair, MapPin, Play, X, FileText, Smartphone, Monitor
+  ShieldCheck, Crosshair, MapPin, Play, X, FileText, Smartphone, Monitor, Layers, AlertTriangle
 } from 'lucide-react';
 
 export default function CAFWiFiAnalyzer() {
-  // Tabs configuration moved inside to ensure it is defined for the UI
+  // Hydration safety
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Tabs configuration
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'spectrum', label: 'Spectrum', icon: TrendingUp },
@@ -27,15 +30,26 @@ export default function CAFWiFiAnalyzer() {
 
   // Auth State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [adminName, setAdminName] = useState('');
   const [email, setEmail] = useState('admin@caf.com');
   const [password, setPassword] = useState('admin123');
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
 
-  // Hydration safety
-  const [isMounted, setIsMounted] = useState(false);
+  // App State
+  const [darkMode, setDarkMode] = useState(true);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedBand, setSelectedBand] = useState<'2.4GHz' | '5GHz'>('5GHz');
+  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [isScanning, setIsScanning] = useState(false);
+  const [location, setLocation] = useState("");
+
+  // Tracking / Locator State
+  const [trackingNetwork, setTrackingNetwork] = useState<any>(null);
+  const [currentSignal, setCurrentSignal] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Network Info State
   const [networkInfo, setNetworkInfo] = useState({
@@ -56,13 +70,30 @@ export default function CAFWiFiAnalyzer() {
     testing: false
   });
 
-  // App State
-  const [darkMode, setDarkMode] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [selectedBand, setSelectedBand] = useState<'2.4GHz' | '5GHz'>('5GHz');
-  const [audioEnabled, setAudioEnabled] = useState(true);
-  const [isScanning, setIsScanning] = useState(false);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  // Mock Data for Graphs
+  const discoveredNetworks = [
+    { id: '1', ssid: 'CAF-WIFI-5G', signalStrength: -45, channel: 36, clientsConnected: 15, frequencyBand: '5GHz', encryption: 'WPA3', vendor: 'ARUBA', macAddress: '00:0B:86:12:34:56', bandwidthMbps: 850, interferenceScore: 1 },
+    { id: '2', ssid: 'CAF-WIFI-2G', signalStrength: -58, channel: 6, clientsConnected: 22, frequencyBand: '2.4GHz', encryption: 'WPA3', vendor: 'ARUBA', macAddress: '00:0B:86:78:90:AB', bandwidthMbps: 150, interferenceScore: 4 },
+    { id: '3', ssid: 'CAF-GUEST', signalStrength: -65, channel: 52, clientsConnected: 8, frequencyBand: '5GHz', encryption: 'WPA2', vendor: 'ARUBA', macAddress: '00:0B:86:CD:EF:01', bandwidthMbps: 300, interferenceScore: 2 },
+    { id: '4', ssid: 'CAF-IoT', signalStrength: -70, channel: 1, clientsConnected: 32, frequencyBand: '2.4GHz', encryption: 'WPA2', vendor: 'HUAWEI', macAddress: '7c:1c:f1:25:19:2c', bandwidthMbps: 50, interferenceScore: 8 },
+    { id: '5', ssid: 'CAF-ADMIN', signalStrength: -50, channel: 128, clientsConnected: 5, frequencyBand: '5GHz', encryption: 'WPA3-Enterprise', vendor: 'TP-LINK', macAddress: '98:da:c4:26:21:87', bandwidthMbps: 900, interferenceScore: 1 },
+    { id: '6', ssid: 'CAF-BACKUP', signalStrength: -72, channel: 11, clientsConnected: 3, frequencyBand: '2.4GHz', encryption: 'WPA3', vendor: 'GENERIC', macAddress: '9e:da:c4:26:21:87', bandwidthMbps: 100, interferenceScore: 5 }
+  ];
+
+  const performanceData = discoveredNetworks.map(n => ({
+    name: n.ssid,
+    signal: Math.abs(n.signalStrength),
+    bandwidth: n.bandwidthMbps,
+    interference: n.interferenceScore * 10,
+  }));
+
+  const typeData = [
+    { name: 'Main', value: 2, color: '#3b82f6' },
+    { name: 'Guest', value: 1, color: '#10b981' },
+    { name: 'IoT', value: 1, color: '#f59e0b' }
+  ];
+
+  const COLORS = ['#3b82f6', '#06b6d4', '#a855f7', '#10b981', '#f59e0b', '#ec4899'];
 
   // Initialize
   useEffect(() => {
@@ -87,7 +118,6 @@ export default function CAFWiFiAnalyzer() {
         loading: false
       });
     } catch (err) {
-      console.error('IP fetch error:', err);
       setNetworkInfo(prev => ({ ...prev, loading: false }));
     }
   };
@@ -111,7 +141,6 @@ export default function CAFWiFiAnalyzer() {
     if (audioEnabled) {
       playBeep(800, 100);
       setTimeout(() => playBeep(1000, 100), 150);
-      setTimeout(() => playBeep(1200, 150), 300);
     }
   };
 
@@ -140,6 +169,49 @@ export default function CAFWiFiAnalyzer() {
     }
   };
 
+  // Signal Tracker / Locator Effect
+  useEffect(() => {
+    if (trackingNetwork) {
+      setCurrentSignal(trackingNetwork.signalStrength);
+      
+      const locatorBeep = () => {
+        if (isMuted || !isMounted) return;
+        const ctx = initAudio();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        // Frequency shifts higher as signal gets closer to 0
+        const freq = 400 + (Math.abs(currentSignal) < 50 ? 400 : 0) + (Math.abs(currentSignal + 95) * 3);
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.1);
+      };
+
+      const updateInterval = () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        // Delay shortens as signal strength increases
+        const delay = Math.max(80, (Math.abs(currentSignal) - 30) * 18);
+        intervalRef.current = setInterval(() => {
+          locatorBeep();
+          setCurrentSignal(prev => {
+            const fluctuation = (Math.random() - 0.5) * 6;
+            const newVal = prev + fluctuation;
+            return Math.min(-30, Math.max(-95, newVal));
+          });
+        }, delay);
+      };
+
+      updateInterval();
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [trackingNetwork, currentSignal, isMuted, isMounted]);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
@@ -155,20 +227,33 @@ export default function CAFWiFiAnalyzer() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setActiveTab('dashboard');
+    setTrackingNetwork(null);
   };
 
-  // Spectrum Data
-  const currentSpectrum = selectedBand === '2.4GHz' 
-    ? [
-        { channel: 1, 'CAF-WIFI-2G': 65, congestion: 40 },
-        { channel: 6, 'CAF-WIFI-2G': 85, congestion: 70 },
-        { channel: 11, 'CAF-WIFI-2G': 50, congestion: 30 },
-      ]
-    : [
-        { channel: 36, 'CAF-WIFI-5G': 90, congestion: 20 },
-        { channel: 44, 'CAF-WIFI-5G': 85, congestion: 15 },
-        { channel: 149, 'CAF-WIFI-5G': 70, congestion: 45 },
-      ];
+  // Channel Spectrum Gaussian Logic
+  const channelGraphData = useMemo(() => {
+    const is2G = selectedBand === '2.4GHz';
+    const channels = is2G ? Array.from({ length: 14 }, (_, i) => i + 1) : [36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 149, 153, 157, 161, 165];
+    
+    const dataPoints: any[] = [];
+    const minChan = Math.min(...channels) - 2;
+    const maxChan = Math.max(...channels) + 2;
+    
+    for (let i = minChan; i <= maxChan; i += 0.5) {
+      const point: any = { channel: i };
+      discoveredNetworks.filter(n => n.frequencyBand === selectedBand).forEach(net => {
+        const dist = Math.abs(i - net.channel);
+        if (dist <= 2) {
+          const strength = Math.max(0, (net.signalStrength + 100));
+          point[net.ssid] = strength * (1 - (dist / 2));
+        } else {
+          point[net.ssid] = 0;
+        }
+      });
+      dataPoints.push(point);
+    }
+    return dataPoints;
+  }, [selectedBand]);
 
   if (!isMounted) return null;
 
@@ -251,7 +336,7 @@ export default function CAFWiFiAnalyzer() {
             {tabs.map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => { setActiveTab(tab.id); setTrackingNetwork(null); }}
                 className={`py-4 flex items-center gap-2 text-xs font-bold uppercase tracking-widest border-b-2 transition-all ${
                   activeTab === tab.id ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500 hover:text-white'
                 }`}
@@ -265,145 +350,328 @@ export default function CAFWiFiAnalyzer() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8 animate-in fade-in duration-500">
-        {activeTab === 'dashboard' && (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { label: 'CAF Networks', value: '6', change: '+2.5%', icon: Wifi, color: 'text-blue-500' },
-                { label: 'Active APs', value: '18', change: 'STABLE', icon: Router, color: 'text-cyan-500' },
-                { label: 'Avg Signal', value: '-52 dBm', change: 'EXCELLENT', icon: Signal, color: 'text-purple-500' },
-                { label: 'Network Health', value: '98%', change: 'OPTIMAL', icon: ShieldCheck, color: 'text-green-500' }
-              ].map((stat, i) => (
-                <div key={i} className="bg-dark-800 p-6 rounded-2xl border border-dark-700 hover:border-dark-600 transition-all group">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className={`p-3 rounded-xl bg-dark-700 ${stat.color} group-hover:scale-110 transition-transform`}>
-                      <stat.icon className="w-6 h-6" />
-                    </div>
-                    <div className="text-[10px] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full">{stat.change}</div>
-                  </div>
-                  <div className="text-xs font-bold text-gray-500 uppercase mb-1 tracking-wider">{stat.label}</div>
-                  <div className="text-2xl font-bold">{stat.value}</div>
+        {trackingNetwork ? (
+          /* LOCATE AP MODE - Enterprise Locator Interface */
+          <div className="max-w-2xl mx-auto space-y-6 animate-in zoom-in-95 duration-300">
+            <div className={`p-8 rounded-3xl border-2 shadow-2xl text-center space-y-8 ${darkMode ? 'bg-dark-800 border-blue-500/50' : 'bg-white border-blue-200'}`}>
+              <div className="flex justify-between items-start">
+                <div className="text-left">
+                  <h2 className="text-2xl font-bold flex items-center gap-2">
+                    <Crosshair className="text-blue-500 animate-pulse" /> Locating: {trackingNetwork.ssid}
+                  </h2>
+                  <p className="text-slate-400 font-mono text-sm mt-1">{trackingNetwork.macAddress}</p>
                 </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-dark-800 p-8 rounded-2xl border border-dark-700">
-                <h3 className="text-lg font-bold mb-6 flex items-center gap-2 uppercase tracking-wide text-gray-400">
-                  <Signal className="w-5 h-5 text-blue-500" /> Spectral Strength Index
-                </h3>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={[
-                      { name: '5G-MAIN', val: 85 }, { name: '2G-MAIN', val: 72 }, { name: 'GUEST', val: 68 }, { name: 'IoT', val: 55 }
-                    ]}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                      <XAxis dataKey="name" stroke="#555" fontSize={10} axisLine={false} tickLine={false} />
-                      <YAxis stroke="#555" fontSize={10} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={{ backgroundColor: '#111', border: 'none', borderRadius: '8px' }} />
-                      <Bar dataKey="val" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <div className="flex gap-2">
+                  <button onClick={() => setIsMuted(!isMuted)} className="p-3 rounded-xl bg-dark-700 hover:bg-dark-600">
+                    {isMuted ? <VolumeX /> : <Volume2 />}
+                  </button>
+                  <button onClick={() => setTrackingNetwork(null)} className="p-3 rounded-xl hover:bg-red-500/10 hover:text-red-500 bg-dark-700">
+                    <X />
+                  </button>
                 </div>
               </div>
-              <div className="bg-dark-800 p-8 rounded-2xl border border-dark-700 flex flex-col">
-                <h3 className="text-lg font-bold mb-6 uppercase tracking-wide text-gray-400">Network Distribution</h3>
-                <div className="h-[300px] flex-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={[
-                        { name: 'Main', value: 2, color: '#3b82f6' },
-                        { name: 'Guest', value: 1, color: '#10b981' },
-                        { name: 'IoT', value: 1, color: '#f59e0b' }
-                      ]} cx="50%" cy="50%" innerRadius={60} outerRadius={80} dataKey="value">
-                        { [0,1,2].map((_, i) => <Cell key={i} fill={['#3b82f6', '#10b981', '#f59e0b'][i]} stroke="none" />) }
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
+
+              <div className="py-12">
+                <div className="text-8xl font-black tracking-tighter text-blue-500">
+                  {Math.round(currentSignal)}<span className="text-2xl text-slate-500 ml-1">dBm</span>
                 </div>
+                <div className="mt-8 h-4 w-full bg-slate-700/30 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 transition-all duration-300" 
+                    style={{ width: `${Math.min(100, Math.max(0, (currentSignal + 100) * 1.5))}%` }} 
+                  />
+                </div>
+                <p className="mt-6 text-slate-400 text-sm font-medium">Beep frequency increases as you approach the targeted AP.</p>
               </div>
             </div>
           </div>
-        )}
-
-        {activeTab === 'analytics' && (
+        ) : (
+          /* STANDARD TABS */
           <div className="space-y-8">
-            <div className="bg-dark-800 p-8 rounded-3xl border border-dark-700 shadow-2xl">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                <div>
-                  <h3 className="text-2xl font-bold">Throughput Analysis</h3>
-                  <p className="text-sm text-gray-400">Real-time WAN performance monitoring</p>
+            {activeTab === 'dashboard' && (
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[
+                    { label: 'CAF Networks', value: '6', change: '+2.5%', icon: Wifi, color: 'text-blue-500' },
+                    { label: 'Active APs', value: '18', change: 'STABLE', icon: Router, color: 'text-cyan-500' },
+                    { label: 'Avg Signal', value: '-52 dBm', change: 'EXCELLENT', icon: Signal, color: 'text-purple-500' },
+                    { label: 'Network Health', value: '98%', change: 'OPTIMAL', icon: ShieldCheck, color: 'text-green-500' }
+                  ].map((stat, i) => (
+                    <div key={i} className="bg-dark-800 p-6 rounded-2xl border border-dark-700 hover:border-dark-600 transition-all group">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className={`p-3 rounded-xl bg-dark-700 ${stat.color} group-hover:scale-110 transition-transform`}>
+                          <stat.icon className="w-6 h-6" />
+                        </div>
+                        <div className="text-[10px] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full">{stat.change}</div>
+                      </div>
+                      <div className="text-xs font-bold text-gray-500 uppercase mb-1 tracking-wider">{stat.label}</div>
+                      <div className="text-2xl font-bold">{stat.value}</div>
+                    </div>
+                  ))}
                 </div>
-                <button
-                  onClick={performSpeedTest}
-                  disabled={speedTest.testing}
-                  className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold flex items-center gap-3 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20"
-                >
-                  {speedTest.testing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
-                  {speedTest.testing ? 'RUNNING TEST...' : 'START SPEED TEST'}
-                </button>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                {[
-                  { label: 'Download', val: speedTest.download, unit: 'Mbps', color: 'text-blue-500', max: 1000 },
-                  { label: 'Upload', val: speedTest.upload, unit: 'Mbps', color: 'text-green-500', max: 500 },
-                  { label: 'Latency', val: speedTest.ping, unit: 'ms', color: 'text-yellow-500', max: 100 }
-                ].map((item, i) => (
-                  <div key={i} className="flex flex-col items-center">
-                    <div className="relative w-48 h-48 mb-6">
-                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="45" fill="none" stroke="#222" strokeWidth="6" />
-                        <circle 
-                          cx="50" cy="50" r="45" fill="none" 
-                          stroke="currentColor" strokeWidth="6"
-                          strokeDasharray={`${(item.val / item.max) * 282.7} 282.7`}
-                          className={item.color}
-                          strokeLinecap="round"
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="bg-dark-800 p-8 rounded-2xl border border-dark-700">
+                    <h3 className="text-lg font-bold mb-6 flex items-center gap-2 uppercase tracking-wide text-gray-400">
+                      <Signal className="w-5 h-5 text-blue-500" /> Spectral Strength Index
+                    </h3>
+                    <div className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={signalData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+                          <XAxis dataKey="network" stroke="#555" fontSize={10} axisLine={false} tickLine={false} />
+                          <YAxis stroke="#555" fontSize={10} axisLine={false} tickLine={false} />
+                          <Tooltip contentStyle={{ backgroundColor: '#111', border: 'none', borderRadius: '8px' }} />
+                          <Bar dataKey="strength" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                  <div className="bg-dark-800 p-8 rounded-2xl border border-dark-700 flex flex-col">
+                    <h3 className="text-lg font-bold mb-6 uppercase tracking-wide text-gray-400">Network Distribution</h3>
+                    <div className="h-[300px] flex-1">
+                      <ResponsiveContainer width="100%" height={100}>
+                        <PieChart>
+                          <Pie data={typeData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} dataKey="value">
+                            {typeData.map((entry, index) => <Cell key={index} fill={entry.color} stroke="none" />)}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'spectrum' && (
+              <div className="space-y-6">
+                <div className="bg-dark-800 p-8 rounded-2xl border border-dark-700">
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+                    <div>
+                      <h3 className="text-lg font-bold flex items-center gap-2">
+                        <Layers className="w-5 h-5 text-primary" /> Channel Spectrum Graph
+                      </h3>
+                      <p className="text-sm text-gray-500">Gaussian signal modeling of existing CAF infrastructure</p>
+                    </div>
+                    <div className="flex gap-2">
+                      {['2.4GHz', '5GHz'].map((b) => (
+                        <button
+                          key={b}
+                          onClick={() => setSelectedBand(b as any)}
+                          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            selectedBand === b ? 'bg-blue-600 text-white' : 'bg-dark-700 text-gray-400'
+                          }`}
+                        >
+                          {b}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="h-[400px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={channelGraphData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={true} stroke="#333" />
+                        <XAxis dataKey="channel" type="number" domain={['dataMin', 'dataMax']} stroke="#888" fontSize={12} />
+                        <YAxis stroke="#888" fontSize={12} domain={[0, 100]} />
+                        <Tooltip contentStyle={{ backgroundColor: 'rgba(23, 23, 23, 0.9)', border: 'none', borderRadius: '12px' }} />
+                        {discoveredNetworks.filter(n => n.frequencyBand === selectedBand).map((net, i) => (
+                          <Area
+                            key={net.ssid}
+                            type="monotone"
+                            dataKey={net.ssid}
+                            stroke={COLORS[i % COLORS.length]}
+                            fill={COLORS[i % COLORS.length]}
+                            fillOpacity={0.3}
+                            strokeWidth={2}
+                          />
+                        ))}
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-dark-800 p-6 rounded-2xl border border-dark-700">
+                    <h3 className="text-md font-bold mb-4 flex items-center gap-2"><Activity className="w-4 h-4 text-blue-500" /> Bandwidth Distribution</h3>
+                    <div className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={performanceData} layout="vertical">
+                          <XAxis type="number" stroke="#888" fontSize={10} unit="M" />
+                          <YAxis dataKey="name" type="category" stroke="#888" fontSize={10} width={80} />
+                          <Bar dataKey="bandwidth" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                  <div className="bg-dark-800 p-6 rounded-2xl border border-dark-700">
+                    <h3 className="text-md font-bold mb-4 flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-orange-500" /> Interference Impact</h3>
+                    <div className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={performanceData}>
+                          <XAxis dataKey="name" stroke="#888" fontSize={10} />
+                          <YAxis stroke="#888" fontSize={10} />
+                          <Bar dataKey="interference" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'scanner' && (
+              <div className="space-y-6">
+                <div className="bg-dark-800 p-8 rounded-2xl border border-dark-700">
+                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                    <Crosshair className="text-blue-500" /> Professional Site Survey
+                  </h3>
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-1">
+                      <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Scan Environment Name</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                        <input
+                          type="text"
+                          value={location}
+                          onChange={(e) => setLocation(e.target.value)}
+                          placeholder="e.g. B-Wing Server Room"
+                          className="w-full pl-10 pr-4 py-3 rounded-xl bg-dark-700 border border-dark-600 focus:border-blue-500 outline-none transition-all"
                         />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <div className="text-3xl font-black">{item.val}</div>
-                        <div className="text-[10px] font-bold text-gray-500 uppercase">{item.unit}</div>
                       </div>
                     </div>
-                    <div className="text-sm font-bold uppercase tracking-widest text-gray-400">{item.label}</div>
+                    <button 
+                      onClick={() => { setIsScanning(true); setTimeout(() => setIsScanning(false), 2000); }} 
+                      disabled={isScanning}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {isScanning ? <Loader2 className="animate-spin" /> : <Play />}
+                      {isScanning ? "Initializing Scan..." : "Start Site Survey"}
+                    </button>
                   </div>
-                ))}
-              </div>
-              <div className="mt-12 pt-8 border-t border-dark-700 text-center text-xs text-gray-500 font-mono">
-                LAST AUDIT: {speedTest.timestamp}
-              </div>
-            </div>
+                </div>
 
-            <div className="bg-dark-800 p-8 rounded-3xl border border-dark-700">
-              <h3 className="text-lg font-bold mb-8 flex items-center gap-2 uppercase tracking-widest">
-                <Globe className="w-5 h-5 text-blue-500" /> Network Footprint
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                  { label: 'Public IP', value: networkInfo.ip, icon: Wifi },
-                  { label: 'Provider', value: networkInfo.isp, icon: Activity },
-                  { label: 'Region', value: networkInfo.country, icon: Globe },
-                  { label: 'Primary DNS', value: networkInfo.dns1, icon: Router }
-                ].map((info, i) => (
-                  <div key={i} className="bg-dark-700/50 p-6 rounded-2xl border border-dark-600">
-                    <div className="text-[10px] font-black text-gray-500 uppercase mb-2 tracking-tighter">{info.label}</div>
-                    <div className="text-sm font-bold text-blue-400 truncate">{info.value}</div>
+                <div className="bg-dark-800 rounded-2xl border border-dark-700 overflow-hidden">
+                  <table className="w-full text-sm text-left">
+                    <thead className="bg-dark-700/50 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                      <tr>
+                        <th className="px-6 py-4">SSID / Hardware</th>
+                        <th className="px-6 py-4">Signal Quality</th>
+                        <th className="px-6 py-4">Spectrum</th>
+                        <th className="px-6 py-4">Encryption</th>
+                        <th className="px-6 py-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-dark-700/50">
+                      {discoveredNetworks.map((net) => (
+                        <tr key={net.id} className="hover:bg-blue-500/5 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="font-bold">{net.ssid}</div>
+                            <div className="text-[10px] text-gray-500 font-mono mt-1">{net.vendor} | {net.macAddress}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className={`font-bold flex items-center gap-2 ${net.signalStrength >= -60 ? 'text-green-500' : 'text-yellow-500'}`}>
+                              <Signal className="w-4 h-4" /> {net.signalStrength} dBm
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-xs">CH {net.channel} | {net.frequencyBand}</td>
+                          <td className="px-6 py-4 text-xs text-gray-400"><Lock className="w-3 h-3 inline mr-1" /> {net.encryption}</td>
+                          <td className="px-6 py-4 text-right">
+                            <button 
+                              onClick={() => setTrackingNetwork(net)}
+                              className="bg-blue-500/10 text-blue-500 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-bold border border-blue-500/20"
+                            >
+                              LOCATE AP
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'analytics' && (
+              <div className="space-y-8">
+                <div className="bg-dark-800 p-8 rounded-3xl border border-dark-700 shadow-2xl">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                    <div>
+                      <h3 className="text-2xl font-bold">Throughput Analysis</h3>
+                      <p className="text-sm text-gray-400">Real-time WAN performance monitoring</p>
+                    </div>
+                    <button
+                      onClick={performSpeedTest}
+                      disabled={speedTest.testing}
+                      className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold flex items-center gap-3 transition-all disabled:opacity-50"
+                    >
+                      {speedTest.testing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
+                      {speedTest.testing ? 'RUNNING TEST...' : 'START SPEED TEST'}
+                    </button>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Placeholder for other tabs */}
-        {['spectrum', 'scanner', 'reports', 'admin', 'settings'].includes(activeTab) && (
-          <div className="flex flex-col items-center justify-center py-20 bg-dark-800 rounded-3xl border border-dashed border-dark-700">
-            <Activity className="w-16 h-16 text-dark-600 mb-4 animate-pulse" />
-            <h3 className="text-xl font-bold uppercase tracking-widest text-gray-500">{activeTab} MODULE ACTIVE</h3>
-            <p className="text-sm text-gray-600 mt-2">Aruba Cloud-Link Established | Monitoring spectrum...</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                    {[
+                      { label: 'Download', val: speedTest.download, unit: 'Mbps', color: 'text-blue-500', max: 1000 },
+                      { label: 'Upload', val: speedTest.upload, unit: 'Mbps', color: 'text-green-500', max: 500 },
+                      { label: 'Latency', val: speedTest.ping, unit: 'ms', color: 'text-yellow-500', max: 100 }
+                    ].map((item, i) => (
+                      <div key={i} className="flex flex-col items-center">
+                        <div className="relative w-48 h-48 mb-6">
+                          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#222" strokeWidth="6" />
+                            <circle 
+                              cx="50" cy="50" r="45" fill="none" 
+                              stroke="currentColor" strokeWidth="6"
+                              strokeDasharray={`${(item.val / item.max) * 282.7} 282.7`}
+                              className={item.color}
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <div className="text-3xl font-black">{item.val}</div>
+                            <div className="text-[10px] font-bold text-gray-500 uppercase">{item.unit}</div>
+                          </div>
+                        </div>
+                        <div className="text-sm font-bold uppercase tracking-widest text-gray-400">{item.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-dark-800 p-8 rounded-3xl border border-dark-700">
+                  <h3 className="text-lg font-bold mb-8 flex items-center gap-2 uppercase tracking-widest text-gray-500">
+                    <Globe className="w-5 h-5 text-blue-500" /> Network Footprint
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {[
+                      { label: 'Public IP', value: networkInfo.ip, icon: Wifi },
+                      { label: 'Provider', value: networkInfo.isp, icon: Activity },
+                      { label: 'Region', value: networkInfo.country, icon: Globe },
+                      { label: 'Primary DNS', value: networkInfo.dns1, icon: Router }
+                    ].map((info, i) => (
+                      <div key={i} className="bg-dark-700/50 p-6 rounded-2xl border border-dark-600">
+                        <div className="text-[10px] font-black text-gray-500 uppercase mb-2 tracking-tighter">{info.label}</div>
+                        <div className="text-sm font-bold text-blue-400 truncate">{info.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Placeholder for remaining modules */}
+            {['reports', 'admin', 'settings'].includes(activeTab) && (
+              <div className="flex flex-col items-center justify-center py-20 bg-dark-800 rounded-3xl border border-dashed border-dark-700">
+                <Activity className="w-16 h-16 text-dark-600 mb-4 animate-pulse" />
+                <h3 className="text-xl font-bold uppercase tracking-widest text-gray-500">{activeTab} MODULE ACTIVE</h3>
+                <p className="text-sm text-gray-600 mt-2">Enterprise Access Confirmed | Monitoring System...</p>
+                <div className="mt-8 flex gap-4">
+                   <div className="px-4 py-2 bg-dark-700 rounded-lg text-xs">v3.6.0-ENTERPRISE</div>
+                   <div className="px-4 py-2 bg-dark-700 rounded-lg text-xs text-green-500">OPERATIONAL</div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
