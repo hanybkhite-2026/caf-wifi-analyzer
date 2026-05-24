@@ -34,8 +34,8 @@ export default function LoginPage() {
     if (!auth || !db) {
       toast({
         variant: "destructive",
-        title: "Firebase Error",
-        description: "Firebase services are not initialized yet. Please wait a moment.",
+        title: "System Not Ready",
+        description: "Firebase services are still initializing. Please wait a moment.",
       });
       return;
     }
@@ -44,12 +44,15 @@ export default function LoginPage() {
 
     try {
       if (isRegistering) {
+        // 1. Create the user in Firebase Auth
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         
+        // 2. Update the Auth profile
         await updateProfile(userCredential.user, {
           displayName: 'Admin User'
         });
 
+        // 3. Store extended user data in Firestore
         const userRef = doc(db, 'users', userCredential.user.uid);
         const userData = {
           uid: userCredential.user.uid,
@@ -59,11 +62,11 @@ export default function LoginPage() {
           createdAt: new Date().toISOString()
         };
 
-        // Attempt to create profile in Firestore
         try {
           await setDoc(userRef, userData);
         } catch (dbError: any) {
-          console.error("Firestore Error:", dbError);
+          // If Firestore fails (e.g. security rules), we still have the Auth account
+          // but we emit the error for the listener
           if (dbError.code === 'permission-denied') {
             const permissionError = new FirestorePermissionError({
               path: userRef.path,
@@ -75,35 +78,34 @@ export default function LoginPage() {
         }
 
         toast({ 
-          title: "Account Created", 
-          description: "Welcome! Your admin account has been created." 
+          title: "Registration Successful", 
+          description: "Your admin account has been created and profile stored." 
         });
       } else {
         await signInWithEmailAndPassword(auth, email, password);
         toast({ 
           title: "Welcome Back", 
-          description: "Sign in successful." 
+          description: "Signed in as " + email 
         });
       }
     } catch (error: any) {
       console.error("Auth Error:", error);
       let message = error.message || "An unexpected error occurred.";
       
-      if (error.code === 'auth/user-not-found') {
-        message = "No account found. Please register first.";
-      } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        message = "Incorrect email or password.";
+      // Handle specific Firebase Auth error codes
+      if (error.code === 'auth/api-key-not-valid') {
+        message = "The Firebase API key is invalid. Please check your config.ts or environment variables.";
+      } else if (error.code === 'auth/user-not-found') {
+        message = "No account found with this email.";
+      } else if (error.code === 'auth/wrong-password') {
+        message = "Incorrect password.";
       } else if (error.code === 'auth/email-already-in-use') {
-        message = "This email is already registered.";
-      } else if (error.code === 'auth/invalid-api-key') {
-        message = "The Firebase API key provided is invalid. Please double check your configuration.";
-      } else if (error.code === 'auth/network-request-failed') {
-        message = "Network error. Please check your internet connection.";
+        message = "This email address is already in use.";
       }
       
       toast({
         variant: "destructive",
-        title: "Authentication Failed",
+        title: "Authentication Error",
         description: message,
       });
     } finally {
@@ -126,7 +128,7 @@ export default function LoginPage() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent rounded-full blur-[120px]" />
       </div>
 
-      <Card className="w-full max-w-md glass border-none shadow-2xl z-10 animate-in fade-in zoom-in duration-500">
+      <Card className="w-full max-w-md glass border-none shadow-2xl z-10">
         <CardHeader className="text-center space-y-4">
           <div className="w-16 h-16 rounded-2xl gradient-blue-cyan flex items-center justify-center mx-auto shadow-xl">
             <Wifi className="text-white w-8 h-8" />
@@ -143,7 +145,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="hanybkhite@gmail.com"
+                placeholder="admin@caf.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -166,7 +168,7 @@ export default function LoginPage() {
             {!isRegistering && (
               <div className="flex items-center gap-2 p-3 bg-blue-500/10 rounded-lg text-blue-500 border border-blue-500/20 text-xs font-medium">
                 <AlertCircle className="w-4 h-4 shrink-0" />
-                <p>New here? Use the <strong>Register</strong> option below to create an admin account.</p>
+                <p>New here? Toggle <strong>Register as Admin</strong> below to create your account.</p>
               </div>
             )}
           </CardContent>
