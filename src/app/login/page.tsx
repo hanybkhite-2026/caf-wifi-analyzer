@@ -31,12 +31,11 @@ export default function LoginPage() {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check if Firebase is initialized correctly
-    if (!auth || !db || (auth as any).config?.apiKey === "placeholder-api-key") {
+    if (!auth || !db) {
       toast({
         variant: "destructive",
-        title: "Configuration Missing",
-        description: "Please update src/firebase/config.ts with your real Firebase project keys.",
+        title: "Firebase Error",
+        description: "Firebase services are not initialized yet. Please wait a moment.",
       });
       return;
     }
@@ -60,14 +59,20 @@ export default function LoginPage() {
           createdAt: new Date().toISOString()
         };
 
-        setDoc(userRef, userData).catch(async (error) => {
-          const permissionError = new FirestorePermissionError({
-            path: userRef.path,
-            operation: 'create',
-            requestResourceData: userData,
-          });
-          errorEmitter.emit('permission-error', permissionError);
-        });
+        // Attempt to create profile in Firestore
+        try {
+          await setDoc(userRef, userData);
+        } catch (dbError: any) {
+          console.error("Firestore Error:", dbError);
+          if (dbError.code === 'permission-denied') {
+            const permissionError = new FirestorePermissionError({
+              path: userRef.path,
+              operation: 'create',
+              requestResourceData: userData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+          }
+        }
 
         toast({ 
           title: "Account Created", 
@@ -91,7 +96,9 @@ export default function LoginPage() {
       } else if (error.code === 'auth/email-already-in-use') {
         message = "This email is already registered.";
       } else if (error.code === 'auth/invalid-api-key') {
-        message = "The Firebase API key is invalid. Check your config.ts.";
+        message = "The Firebase API key provided is invalid. Please double check your configuration.";
+      } else if (error.code === 'auth/network-request-failed') {
+        message = "Network error. Please check your internet connection.";
       }
       
       toast({
