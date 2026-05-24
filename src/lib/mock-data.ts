@@ -9,15 +9,17 @@ export interface NetworkScan {
   encryption: string;
   location: string;
   interferenceScore: number;
+  vendor?: string;
+  macAddress?: string;
 }
 
 export const MOCK_NETWORKS: NetworkScan[] = [
-  { id: '1', ssid: 'CAF-WIFI-5G', networkType: 'Main', signalStrength: -45, channel: 36, clientsConnected: 15, frequencyBand: '5GHz', encryption: 'WPA3', location: 'Floor 1, Office A', interferenceScore: 1 },
-  { id: '2', ssid: 'CAF-WIFI-2G', networkType: 'Main', signalStrength: -58, channel: 6, clientsConnected: 22, frequencyBand: '2.4GHz', encryption: 'WPA3', location: 'Floor 1, Lobby', interferenceScore: 4 },
-  { id: '3', ssid: 'CAF-GUEST', networkType: 'Guest', signalStrength: -65, channel: 52, clientsConnected: 8, frequencyBand: '5GHz', encryption: 'WPA2', location: 'Floor 1, Cafeteria', interferenceScore: 2 },
-  { id: '4', ssid: 'CAF-IoT', networkType: 'IoT', signalStrength: -70, channel: 1, clientsConnected: 32, frequencyBand: '2.4GHz', encryption: 'WPA2', location: 'Basement, Utility', interferenceScore: 8 },
-  { id: '5', ssid: 'CAF-ADMIN', networkType: 'Admin', signalStrength: -50, channel: 128, clientsConnected: 5, frequencyBand: '5GHz', encryption: 'WPA3-Enterprise', location: 'Floor 2, Exec', interferenceScore: 1 },
-  { id: '6', ssid: 'CAF-BACKUP', networkType: 'Backup', signalStrength: -72, channel: 11, clientsConnected: 3, frequencyBand: '2.4GHz', encryption: 'WPA3', location: 'Floor 2, Server Room', interferenceScore: 5 },
+  { id: '1', ssid: 'CAF-WIFI-5G', networkType: 'Main', signalStrength: -45, channel: 36, clientsConnected: 15, frequencyBand: '5GHz', encryption: 'WPA3', location: 'Floor 1, Office A', interferenceScore: 1, vendor: 'Aruba Networks', macAddress: '00:0B:86:12:34:56' },
+  { id: '2', ssid: 'CAF-WIFI-2G', networkType: 'Main', signalStrength: -58, channel: 6, clientsConnected: 22, frequencyBand: '2.4GHz', encryption: 'WPA3', location: 'Floor 1, Lobby', interferenceScore: 4, vendor: 'Aruba Networks', macAddress: '00:0B:86:78:90:AB' },
+  { id: '3', ssid: 'CAF-GUEST', networkType: 'Guest', signalStrength: -65, channel: 52, clientsConnected: 8, frequencyBand: '5GHz', encryption: 'WPA2', location: 'Floor 1, Cafeteria', interferenceScore: 2, vendor: 'Aruba Networks', macAddress: '00:0B:86:CD:EF:01' },
+  { id: '4', ssid: 'CAF-IoT', networkType: 'IoT', signalStrength: -70, channel: 1, clientsConnected: 32, frequencyBand: '2.4GHz', encryption: 'WPA2', location: 'Basement, Utility', interferenceScore: 8, vendor: 'Cisco', macAddress: '00:11:22:33:44:55' },
+  { id: '5', ssid: 'CAF-ADMIN', networkType: 'Admin', signalStrength: -50, channel: 128, clientsConnected: 5, frequencyBand: '5GHz', encryption: 'WPA3-Enterprise', location: 'Floor 2, Exec', interferenceScore: 1, vendor: 'Aruba Networks', macAddress: '00:0B:86:44:55:66' },
+  { id: '6', ssid: 'CAF-BACKUP', networkType: 'Backup', signalStrength: -72, channel: 11, clientsConnected: 3, frequencyBand: '2.4GHz', encryption: 'WPA3', location: 'Floor 2, Server Room', interferenceScore: 5, vendor: 'Ubiquiti', macAddress: '24:5A:4C:99:88:77' },
 ];
 
 export const WEEKLY_ACTIVITY = [
