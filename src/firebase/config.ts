@@ -1,7 +1,7 @@
 'use client';
 
 // Firebase configuration object. 
-// Hardcoded with provided credentials to ensure direct connectivity.
+// These values are hardcoded to match your project 'studio-80326841e-b8f17'.
 export const firebaseConfig = {
   apiKey: "AIzaSyBwYlVyw8HVfvVbkSC4Dnrsw4Z3DG5PBRk",
   authDomain: "studio-80326841e-b8f17.firebaseapp.com",

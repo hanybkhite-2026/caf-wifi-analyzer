@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Wifi, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
+import { Wifi, Loader2, AlertCircle, ShieldCheck, Key } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { doc, setDoc } from 'firebase/firestore';
 
@@ -62,7 +62,6 @@ export default function LoginPage() {
           createdAt: new Date().toISOString()
         };
 
-        // Mutation without await for non-blocking local cache update
         setDoc(userRef, userData, { merge: true })
           .catch(async (dbError: any) => {
             if (dbError.code === 'permission-denied') {
@@ -89,22 +88,18 @@ export default function LoginPage() {
     } catch (error: any) {
       console.error("Authentication Error Details:", error);
       
-      let title = "Authentication Error";
+      let title = "Auth Connection Error";
       let message = error.message || "An unexpected error occurred.";
 
       if (error.code === 'auth/api-key-not-valid') {
-        title = "Invalid Configuration";
-        message = "The Firebase API key is reported as invalid. Please ensure the 'studio-80326841e-b8f17' project has Auth enabled and the API key is active.";
+        title = "API Key Error";
+        message = "Firebase reports the API key is invalid. Please check the 'studio-80326841e-b8f17' project settings in Google Cloud Console to ensure the API key has no restrictions and Firebase Auth is enabled.";
       } else if (error.code === 'auth/user-not-found') {
-        message = "No account found with this email. Please Register first.";
+        message = "No account found with this email. Please click 'Register' at the bottom first.";
       } else if (error.code === 'auth/wrong-password') {
         message = "Incorrect password.";
       } else if (error.code === 'auth/email-already-in-use') {
-        message = "This email address is already in use. Try signing in.";
-      } else if (error.code === 'auth/invalid-email') {
-        message = "Please enter a valid email address.";
-      } else if (error.code === 'auth/weak-password') {
-        message = "Password should be at least 6 characters.";
+        message = "This email is already registered. Try signing in instead.";
       }
       
       toast({
@@ -127,7 +122,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
-      {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent rounded-full blur-[120px]" />
@@ -146,7 +140,7 @@ export default function LoginPage() {
         <form onSubmit={handleAuth}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email / Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -171,19 +165,19 @@ export default function LoginPage() {
             </div>
 
             {isRegistering ? (
-              <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg text-primary border border-primary/20 text-xs font-medium animate-in slide-in-from-top-2">
+              <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg text-primary border border-primary/20 text-xs font-medium">
                 <ShieldCheck className="w-4 h-4 shrink-0" />
-                <p>Registering as an <strong>Administrator</strong> for this facility.</p>
+                <p>Registering <strong>Admin</strong> credentials.</p>
               </div>
             ) : (
               <div className="flex items-center gap-2 p-3 bg-blue-500/10 rounded-lg text-blue-500 border border-blue-500/20 text-xs font-medium">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <p>First time? Switch to <strong>Register</strong> to create your admin user.</p>
+                <Key className="w-4 h-4 shrink-0" />
+                <p>Use your <strong>GDIT Admin</strong> credentials to sign in.</p>
               </div>
             )}
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full gradient-blue-cyan h-11 shadow-lg shadow-blue-500/20" disabled={isLoading}>
+            <Button type="submit" className="w-full gradient-blue-cyan h-11" disabled={isLoading}>
               {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               {isRegistering ? "Create Admin Account" : "Sign In"}
             </Button>
