@@ -8,9 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Wifi, Loader2, AlertCircle, ShieldCheck, Key } from "lucide-react";
+import { Wifi, Loader2, ShieldCheck, Key, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { doc, setDoc } from 'firebase/firestore';
+import { firebaseConfig } from '@/firebase/config';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('hanybkhite@gmail.com');
@@ -86,25 +87,23 @@ export default function LoginPage() {
         });
       }
     } catch (error: any) {
-      console.error("Authentication Error Details:", error);
+      console.error("Auth Exception:", error.code, error.message);
       
-      let title = "Auth Connection Error";
       let message = error.message || "An unexpected error occurred.";
 
       if (error.code === 'auth/api-key-not-valid') {
-        title = "API Key Error";
-        message = "Firebase reports the API key is invalid. Please check the 'studio-80326841e-b8f17' project settings in Google Cloud Console to ensure the API key has no restrictions and Firebase Auth is enabled.";
+        message = "The Firebase API key is rejected by the server. Please check the 'studio-80326841e-b8f17' project settings in Google Cloud to ensure the API key is valid and Firebase Auth is enabled.";
       } else if (error.code === 'auth/user-not-found') {
-        message = "No account found with this email. Please click 'Register' at the bottom first.";
+        message = "No account found. Please click 'Register' first.";
       } else if (error.code === 'auth/wrong-password') {
         message = "Incorrect password.";
       } else if (error.code === 'auth/email-already-in-use') {
-        message = "This email is already registered. Try signing in instead.";
+        message = "Email already registered. Try signing in.";
       }
       
       toast({
         variant: "destructive",
-        title: title,
+        title: "Authentication Error",
         description: message,
       });
     } finally {
@@ -127,7 +126,7 @@ export default function LoginPage() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent rounded-full blur-[120px]" />
       </div>
 
-      <Card className="w-full max-w-md glass border-none shadow-2xl z-10 animate-in fade-in zoom-in duration-500">
+      <Card className="w-full max-w-md glass border-none shadow-2xl z-10">
         <CardHeader className="text-center space-y-4">
           <div className="w-16 h-16 rounded-2xl gradient-blue-cyan flex items-center justify-center mx-auto shadow-xl">
             <Wifi className="text-white w-8 h-8" />
@@ -189,6 +188,14 @@ export default function LoginPage() {
             >
               {isRegistering ? "Already have an account? Sign In" : "Need an account? Register as Admin"}
             </Button>
+            
+            <div className="mt-4 p-3 bg-secondary/30 rounded-lg border border-border text-[10px] text-muted-foreground font-mono">
+              <div className="flex items-center gap-1 mb-1 font-bold">
+                <AlertCircle className="w-3 h-3" /> CONFIG DIAGNOSTICS
+              </div>
+              <p>Project: {firebaseConfig.projectId}</p>
+              <p>API Key: {firebaseConfig.apiKey.substring(0, 8)}...</p>
+            </div>
           </CardFooter>
         </form>
       </Card>
