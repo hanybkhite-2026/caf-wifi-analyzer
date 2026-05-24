@@ -80,12 +80,18 @@ export default function CAFWiFiAnalyzer() {
     { id: '6', ssid: 'CAF-BACKUP', signalStrength: -72, channel: 11, clientsConnected: 3, frequencyBand: '2.4GHz', encryption: 'WPA3', vendor: 'GENERIC', macAddress: '9e:da:c4:26:21:87', bandwidthMbps: 100, interferenceScore: 5 }
   ];
 
-  const performanceData = discoveredNetworks.map(n => ({
+  // Derived chart data
+  const signalData = useMemo(() => discoveredNetworks.map(n => ({
+    network: n.ssid,
+    strength: Math.abs(n.signalStrength)
+  })), [discoveredNetworks]);
+
+  const performanceData = useMemo(() => discoveredNetworks.map(n => ({
     name: n.ssid,
     signal: Math.abs(n.signalStrength),
     bandwidth: n.bandwidthMbps,
     interference: n.interferenceScore * 10,
-  }));
+  })), [discoveredNetworks]);
 
   const typeData = [
     { name: 'Main', value: 2, color: '#3b82f6' },
@@ -180,7 +186,6 @@ export default function CAFWiFiAnalyzer() {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sine';
-        // Frequency shifts higher as signal gets closer to 0
         const freq = 400 + (Math.abs(currentSignal) < 50 ? 400 : 0) + (Math.abs(currentSignal + 95) * 3);
         osc.frequency.setValueAtTime(freq, ctx.currentTime);
         gain.gain.setValueAtTime(0.1, ctx.currentTime);
@@ -193,7 +198,6 @@ export default function CAFWiFiAnalyzer() {
 
       const updateInterval = () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
-        // Delay shortens as signal strength increases
         const delay = Math.max(80, (Math.abs(currentSignal) - 30) * 18);
         intervalRef.current = setInterval(() => {
           locatorBeep();
@@ -351,7 +355,6 @@ export default function CAFWiFiAnalyzer() {
 
       <main className="max-w-7xl mx-auto px-6 py-8 animate-in fade-in duration-500">
         {trackingNetwork ? (
-          /* LOCATE AP MODE - Enterprise Locator Interface */
           <div className="max-w-2xl mx-auto space-y-6 animate-in zoom-in-95 duration-300">
             <div className={`p-8 rounded-3xl border-2 shadow-2xl text-center space-y-8 ${darkMode ? 'bg-dark-800 border-blue-500/50' : 'bg-white border-blue-200'}`}>
               <div className="flex justify-between items-start">
@@ -386,7 +389,6 @@ export default function CAFWiFiAnalyzer() {
             </div>
           </div>
         ) : (
-          /* STANDARD TABS */
           <div className="space-y-8">
             {activeTab === 'dashboard' && (
               <div className="space-y-8">
@@ -402,7 +404,7 @@ export default function CAFWiFiAnalyzer() {
                         <div className={`p-3 rounded-xl bg-dark-700 ${stat.color} group-hover:scale-110 transition-transform`}>
                           <stat.icon className="w-6 h-6" />
                         </div>
-                        <div className="text-[10px] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full">{stat.change}</div>
+                        <div className="text-[10px] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-full">STABLE</div>
                       </div>
                       <div className="text-xs font-bold text-gray-500 uppercase mb-1 tracking-wider">{stat.label}</div>
                       <div className="text-2xl font-bold">{stat.value}</div>
@@ -430,7 +432,7 @@ export default function CAFWiFiAnalyzer() {
                   <div className="bg-dark-800 p-8 rounded-2xl border border-dark-700 flex flex-col">
                     <h3 className="text-lg font-bold mb-6 uppercase tracking-wide text-gray-400">Network Distribution</h3>
                     <div className="h-[300px] flex-1">
-                      <ResponsiveContainer width="100%" height={100}>
+                      <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie data={typeData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} dataKey="value">
                             {typeData.map((entry, index) => <Cell key={index} fill={entry.color} stroke="none" />)}
@@ -660,7 +662,6 @@ export default function CAFWiFiAnalyzer() {
               </div>
             )}
 
-            {/* Placeholder for remaining modules */}
             {['reports', 'admin', 'settings'].includes(activeTab) && (
               <div className="flex flex-col items-center justify-center py-20 bg-dark-800 rounded-3xl border border-dashed border-dark-700">
                 <Activity className="w-16 h-16 text-dark-600 mb-4 animate-pulse" />
