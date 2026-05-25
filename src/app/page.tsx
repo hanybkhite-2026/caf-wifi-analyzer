@@ -1,14 +1,15 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Wifi, Sun, Moon, Settings, BarChart3, Network, TrendingUp, 
   Activity, Zap, Volume2, VolumeX, LogOut, Mail, Lock, 
-  Globe, Gauge, Loader2, Eye, EyeOff, Signal, Router, 
-  ShieldCheck, Crosshair, MapPin, Play, X, FileText, Smartphone, Monitor, 
+  Globe, Loader2, Signal, Router, 
+  ShieldCheck, Crosshair, MapPin, Play, X, FileText, 
   Layers, AlertTriangle, UserPlus, CheckCircle2, Clock, 
   Trash2, Filter, Sparkles, ChevronRight, Download, Search, Info,
-  Radio, LayoutDashboard, FileUp, Users, LineChart
+  Radio, LayoutDashboard, FileUp, Users, LineChart as LineChartIcon
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,7 +45,7 @@ export default function CAFWiFiAnalyzer() {
     { id: "access-points", label: "Access Points", icon: Radio },
     { id: "channel-rating", label: "Channel Rating", icon: Signal },
     { id: "channel-graph", label: "Channel Graph", icon: LayoutDashboard },
-    { id: "time-graph", label: "Time Graph", icon: LineChart },
+    { id: "time-graph", label: "Time Graph", icon: LineChartIcon },
     { id: "export", label: "Export", icon: FileUp },
     { id: "vendors", label: "Vendors", icon: Users },
     { id: "settings", label: "Settings", icon: Settings },
