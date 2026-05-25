@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Wifi, Sun, Moon, Settings, BarChart3, Network, TrendingUp, 
   Activity, Zap, Volume2, VolumeX, LogOut, Mail, Lock, 
   Globe, Gauge, Loader2, Eye, EyeOff, Signal, Router, 
   ShieldCheck, Crosshair, MapPin, Play, X, FileText, Smartphone, Monitor, 
-  Layers, AlertTriangle, UserPlus, CheckCircle2, Clock, MoreVertical, 
-  Trash2, Filter, Sparkles, ChevronRight, Download, Search, BadgeAlert, User,
-  Radio, LayoutDashboard, FileUp, Users, Info, LineChart
+  Layers, AlertTriangle, UserPlus, CheckCircle2, Clock, 
+  Trash2, Filter, Sparkles, ChevronRight, Download, Search, Info,
+  Radio, LayoutDashboard, FileUp, Users, LineChart
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
@@ -40,7 +40,7 @@ export default function CAFWiFiAnalyzer() {
     setIsMounted(true);
   }, []);
 
-  const tabs = [
+  const tabs = useMemo(() => [
     { id: "access-points", label: "Access Points", icon: Radio },
     { id: "channel-rating", label: "Channel Rating", icon: Signal },
     { id: "channel-graph", label: "Channel Graph", icon: LayoutDashboard },
@@ -49,7 +49,7 @@ export default function CAFWiFiAnalyzer() {
     { id: "vendors", label: "Vendors", icon: Users },
     { id: "settings", label: "Settings", icon: Settings },
     { id: "about", label: "About", icon: Info },
-  ];
+  ], []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();

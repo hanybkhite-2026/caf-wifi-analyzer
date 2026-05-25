@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { MOCK_NETWORKS } from "@/lib/mock-data";
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, Radar,
+  PieChart, Pie, Cell,
   CartesianGrid, AreaChart, Area
 } from 'recharts';
 import { Wifi, Router, Signal, ShieldCheck, Zap, Activity, AlertTriangle, Layers } from "lucide-react";
@@ -32,12 +32,10 @@ export function DashboardTab() {
     { name: 'IoT', value: MOCK_NETWORKS.filter(n => n.networkType === 'IoT').length },
   ], []);
 
-  // Logic to generate the "humps" for the Channel Graph
   const channelGraphData = useMemo(() => {
     const is2G = band === '2.4GHz';
     const channels = is2G ? Array.from({ length: 14 }, (_, i) => i + 1) : [36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 149, 153, 157, 161, 165];
     
-    // Create a dense range of points for smooth curves
     const dataPoints: any[] = [];
     const minChan = Math.min(...channels) - 2;
     const maxChan = Math.max(...channels) + 2;
@@ -46,9 +44,7 @@ export function DashboardTab() {
       const point: any = { channel: i };
       MOCK_NETWORKS.filter(n => n.frequencyBand === band).forEach(net => {
         const dist = Math.abs(i - net.channel);
-        // Gaussian-like hump: Signal strength drops off as we move from center channel
         if (dist <= 2) {
-          // Normalize signal: -30 is top (100), -90 is bottom (0)
           const strength = Math.max(0, (net.signalStrength + 100));
           point[net.ssid] = strength * (1 - (dist / 2));
         } else {
@@ -90,7 +86,6 @@ export function DashboardTab() {
         ))}
       </div>
 
-      {/* Channel Graph - Professional Spectral View */}
       <Card className="bg-card/50 backdrop-blur-md border-none shadow-lg overflow-hidden">
         <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
@@ -191,14 +186,15 @@ export function DashboardTab() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 bg-card/50 backdrop-blur-md border-none shadow-lg">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-card/50 backdrop-blur-md border-none shadow-lg">
           <CardHeader>
             <CardTitle className="text-lg font-headline">Signal Strength Comparison</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={signalData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
                 <XAxis dataKey="network" fontSize={10} stroke="#888888" />
                 <YAxis fontSize={12} stroke="#888888" domain={[0, 100]} label={{ value: 'dBm (Abs)', angle: -90, position: 'insideLeft' }} />
                 <Tooltip 
