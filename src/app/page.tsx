@@ -1,12 +1,6 @@
-
 'use client';
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { 
-  BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, 
-  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, 
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
-} from 'recharts';
+import React, { useState, useEffect } from 'react';
 import { 
   Wifi, Sun, Moon, Settings, BarChart3, Network, TrendingUp, 
   Activity, Zap, Volume2, VolumeX, LogOut, Mail, Lock, 
@@ -16,8 +10,6 @@ import {
   Trash2, Filter, Sparkles, ChevronRight, Download, Search, BadgeAlert, User,
   Radio, LayoutDashboard, FileUp, Users, Info
 } from 'lucide-react';
-import { reportIssueRecommendations, type ReportIssueRecommendationsOutput } from "@/ai/flows/report-issue-recommendations";
-import { aiNetworkOptimizer, type AiNetworkOptimizerOutput } from "@/ai/flows/ai-network-optimizer";
 import { useToast } from "@/hooks/use-toast";
 
 // Components
@@ -200,4 +192,3 @@ export default function CAFWiFiAnalyzer() {
     </div>
   );
 }
-
