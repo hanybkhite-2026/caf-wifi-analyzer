@@ -15,11 +15,6 @@ const nextConfig: NextConfig = {
         '*.cloudworkstations.dev'
       ],
     },
-    // @ts-ignore - experimental property for cloud environment stabilization
-    allowedDevOrigins: [
-      '6000-firebase-studio-1779618280680.cluster-yy7ncoxb5zd4ouvntrhoc3go3k.cloudworkstations.dev',
-      '*.cloudworkstations.dev'
-    ]
   },
   images: {
     remotePatterns: [

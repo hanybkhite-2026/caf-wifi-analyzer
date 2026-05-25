@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { reportIssueRecommendations, type ReportIssueRecommendationsOutput } from "@/ai/flows/report-issue-recommendations";
 import { aiNetworkOptimizer, type AiNetworkOptimizerOutput } from "@/ai/flows/ai-network-optimizer";
+import { useToast } from "@/hooks/use-toast";
 
 // --- Mock Data ---
 const MOCK_NETWORKS = [
@@ -42,6 +43,7 @@ const REPORTS_LIST = [
 
 export default function CAFWiFiAnalyzer() {
   const [isMounted, setIsMounted] = useState(false);
+  const { toast } = useToast();
 
   // Auth State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -55,6 +57,7 @@ export default function CAFWiFiAnalyzer() {
   const [isScanning, setIsScanning] = useState(false);
   const [locationName, setLocationName] = useState("");
   const [audioEnabled, setAudioEnabled] = useState(true);
+  const [selectedBand, setSelectedBand] = useState<'2.4GHz' | '5GHz'>('5GHz');
 
   // Report Specific State
   const [selectedReport, setSelectedReport] = useState<any>(null);
@@ -110,6 +113,28 @@ export default function CAFWiFiAnalyzer() {
     { name: 'IoT', value: 1, color: '#f59e0b' }
   ], []);
 
+  // Gaussian Spectrum Modeling Logic
+  const spectrumGraphData = useMemo(() => {
+    const dataPoints: any[] = [];
+    const is2G = selectedBand === '2.4GHz';
+    const channels = is2G ? Array.from({ length: 14 }, (_, i) => i + 1) : [36, 40, 44, 48, 52, 56, 60, 64, 149, 153, 157, 161, 165];
+    
+    for (let i = Math.min(...channels) - 2; i <= Math.max(...channels) + 2; i += 0.5) {
+      const point: any = { x: i };
+      MOCK_NETWORKS.filter(n => n.frequencyBand === selectedBand).forEach(net => {
+        const dist = Math.abs(i - net.channel);
+        if (dist <= 2) {
+          const strength = Math.max(0, (net.signalStrength + 100));
+          point[net.ssid] = strength * (1 - (dist / 2));
+        } else {
+          point[net.ssid] = 0;
+        }
+      });
+      dataPoints.push(point);
+    }
+    return dataPoints;
+  }, [selectedBand]);
+
   const COLORS = ['#3b82f6', '#06b6d4', '#a855f7', '#10b981', '#f59e0b', '#ec4899'];
 
   // --- Functions ---
@@ -117,6 +142,7 @@ export default function CAFWiFiAnalyzer() {
     e.preventDefault();
     if (email === 'admin@caf.com' && password === 'admin123') {
       setIsAuthenticated(true);
+      toast({ title: "Welcome Back", description: "System operational." });
     } else {
       setLoginError('Invalid credentials. Use demo: admin@caf.com / admin123');
     }
@@ -137,11 +163,15 @@ export default function CAFWiFiAnalyzer() {
       testing: false,
       timestamp: new Date().toLocaleTimeString()
     });
+    toast({ title: "Test Complete", description: "Speed test metrics updated." });
   };
 
   const startSiteSurvey = () => {
     setIsScanning(true);
-    setTimeout(() => setIsScanning(false), 2500);
+    setTimeout(() => {
+      setIsScanning(false);
+      toast({ title: "Scan Complete", description: `Found ${MOCK_NETWORKS.length} CAF networks.` });
+    }, 2500);
   };
 
   const handleAiOptimize = async () => {
@@ -193,12 +223,49 @@ export default function CAFWiFiAnalyzer() {
     }
   };
 
+  // AP Locator Audio Logic
+  useEffect(() => {
+    if (trackingNetwork) {
+      setCurrentSignal(trackingNetwork.signalStrength);
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      const playBeep = () => {
+        if (isMuted || !audioContextRef.current) return;
+        const osc = audioContextRef.current.createOscillator();
+        const gain = audioContextRef.current.createGain();
+        osc.type = 'sine';
+        const freq = 400 + (Math.abs(currentSignal) < 50 ? 400 : 0) + (Math.abs(currentSignal + 90) * 3);
+        osc.frequency.setValueAtTime(freq, audioContextRef.current.currentTime);
+        gain.gain.setValueAtTime(0.1, audioContextRef.current.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioContextRef.current.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(audioContextRef.current.destination);
+        osc.start();
+        osc.stop(audioContextRef.current.currentTime + 0.1);
+      };
+      const updateInterval = () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        const delay = Math.max(80, (Math.abs(currentSignal) - 30) * 18);
+        intervalRef.current = setInterval(() => {
+          playBeep();
+          setCurrentSignal(prev => {
+            const fluctuation = (Math.random() - 0.5) * 6;
+            return Math.min(-30, Math.max(-95, prev + fluctuation));
+          });
+        }, delay);
+      };
+      updateInterval();
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [trackingNetwork, currentSignal, isMuted]);
+
   if (!isMounted) return null;
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-4 font-sans">
-        <div className="w-full max-w-md bg-[#1e293b] rounded-2xl shadow-2xl p-8 border border-slate-700">
+      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-slate-900/50 rounded-2xl shadow-2xl p-8 border border-slate-800">
           <div className="flex justify-center mb-6">
             <div className="bg-blue-600 rounded-2xl p-4 shadow-lg shadow-blue-500/20">
               <Wifi className="w-12 h-12 text-white" />
@@ -212,7 +279,7 @@ export default function CAFWiFiAnalyzer() {
               <div className="relative">
                 <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500" />
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800/50 border border-slate-700 text-white focus:outline-none focus:border-blue-500" />
               </div>
             </div>
             <div>
@@ -220,7 +287,7 @@ export default function CAFWiFiAnalyzer() {
               <div className="relative">
                 <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
                 <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500" />
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800/50 border border-slate-700 text-white focus:outline-none focus:border-blue-500" />
               </div>
             </div>
             {loginError && <div className="text-red-400 text-xs text-center">{loginError}</div>}
@@ -234,7 +301,8 @@ export default function CAFWiFiAnalyzer() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-white font-sans">
+    <div className="min-h-screen bg-[#0f172a] text-white">
+      {/* Header */}
       <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
@@ -259,7 +327,7 @@ export default function CAFWiFiAnalyzer() {
         <nav className="border-t border-slate-800 bg-slate-900 overflow-x-auto no-scrollbar">
           <div className="max-w-7xl mx-auto px-6 flex gap-6">
             {tabs.map(tab => (
-              <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSelectedReport(null); }}
+              <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSelectedReport(null); setTrackingNetwork(null); }}
                 className={`py-4 flex items-center gap-2 text-xs font-bold uppercase tracking-widest border-b-2 transition-all ${
                   activeTab === tab.id ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500 hover:text-white'
                 }`}>
@@ -270,371 +338,399 @@ export default function CAFWiFiAnalyzer() {
         </nav>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8 animate-in fade-in duration-500">
-        {/* Dashboard Tab */}
-        {activeTab === 'dashboard' && (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { label: 'CAF Networks', value: '6', icon: Wifi, color: 'text-blue-500' },
-                { label: 'Active APs', value: '18', icon: Router, color: 'text-cyan-500' },
-                { label: 'Avg Signal', value: '-52 dBm', icon: Signal, color: 'text-purple-500' },
-                { label: 'Network Health', value: '98%', icon: ShieldCheck, color: 'text-green-500' }
-              ].map((stat, i) => (
-                <div key={i} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 group hover:border-slate-700 transition-all">
-                  <div className={`p-3 rounded-xl bg-slate-800 ${stat.color} w-fit mb-4`}>
-                    <stat.icon className="w-6 h-6" />
-                  </div>
-                  <div className="text-xs font-bold text-gray-500 uppercase mb-1">{stat.label}</div>
-                  <div className="text-2xl font-bold">{stat.value}</div>
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        {trackingNetwork ? (
+          /* AP LOCATOR MODE */
+          <div className="max-w-2xl mx-auto space-y-6 animate-in zoom-in-95 duration-300">
+            <div className="bg-slate-900 p-8 rounded-3xl border border-blue-500/30 text-center space-y-8 shadow-2xl">
+              <div className="flex justify-between items-start">
+                <div className="text-left">
+                  <h2 className="text-2xl font-bold flex items-center gap-2">
+                    <Crosshair className="text-blue-500 animate-pulse" /> Locating: {trackingNetwork.ssid}
+                  </h2>
+                  <p className="text-slate-500 font-mono text-sm mt-1">{trackingNetwork.macAddress}</p>
                 </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800">
-                <h3 className="text-sm font-bold mb-6 uppercase text-gray-400">Signal Strength Analysis</h3>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={signalData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                      <XAxis dataKey="network" stroke="#64748b" fontSize={10} axisLine={false} tickLine={false} />
-                      <YAxis stroke="#64748b" fontSize={10} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '8px' }} />
-                      <Bar dataKey="strength" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <div className="flex gap-2">
+                  <button onClick={() => setIsMuted(!isMuted)} className="p-3 bg-slate-800 rounded-xl">
+                    {isMuted ? <VolumeX /> : <Volume2 />}
+                  </button>
+                  <button onClick={() => setTrackingNetwork(null)} className="p-3 bg-slate-800 rounded-xl hover:text-red-500">
+                    <X />
+                  </button>
                 </div>
               </div>
-              <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800">
-                <h3 className="text-sm font-bold mb-6 uppercase text-gray-400">Network Segment Distribution</h3>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={typeData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} dataKey="value">
-                        {typeData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
+              <div className="py-12">
+                <div className="text-8xl font-black tracking-tighter text-blue-500">
+                  {Math.round(currentSignal)}<span className="text-2xl text-slate-500 ml-1">dBm</span>
                 </div>
+                <div className="mt-8 h-4 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 transition-all duration-300" 
+                    style={{ width: `${Math.min(100, Math.max(0, (currentSignal + 100) * 1.5))}%` }} />
+                </div>
+                <p className="mt-6 text-slate-400 text-sm font-medium">Beep frequency increases as you approach the targeted AP.</p>
               </div>
             </div>
           </div>
-        )}
-
-        {/* Spectrum Tab */}
-        {activeTab === 'spectrum' && (
-          <div className="space-y-6">
-            <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800">
-              <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-                <Layers className="w-5 h-5 text-blue-500" /> Gaussian Spectrum Modeling
-              </h3>
-              <div className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={Array.from({length: 100}, (_, i) => ({
-                    x: i,
-                    ap1: 80 * Math.exp(-Math.pow(i - 30, 2) / 200),
-                    ap2: 60 * Math.exp(-Math.pow(i - 60, 2) / 150),
-                    ap3: 40 * Math.exp(-Math.pow(i - 80, 2) / 100)
-                  }))}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                    <XAxis dataKey="x" hide />
-                    <YAxis stroke="#64748b" fontSize={10} />
-                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: 'none' }} />
-                    <Area type="monotone" dataKey="ap1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
-                    <Area type="monotone" dataKey="ap2" stroke="#10b981" fill="#10b981" fillOpacity={0.3} />
-                    <Area type="monotone" dataKey="ap3" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Scanner Tab */}
-        {activeTab === 'scanner' && (
-          <div className="space-y-6">
-            <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800">
-              <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <Crosshair className="text-blue-500" /> Professional Site Survey
-              </h3>
-              <div className="flex gap-4">
-                <div className="flex-1 relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
-                  <input type="text" value={locationName} onChange={(e) => setLocationName(e.target.value)}
-                    placeholder="e.g. B-Wing Server Room" className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-blue-500" />
-                </div>
-                <button onClick={startSiteSurvey} disabled={isScanning} className="bg-blue-600 hover:bg-blue-700 px-8 rounded-xl font-bold flex items-center gap-2">
-                  {isScanning ? <Loader2 className="animate-spin" /> : <Play />} Start Scan
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-slate-800 text-xs font-bold uppercase tracking-wider text-slate-400">
-                  <tr>
-                    <th className="px-6 py-4">SSID / HW</th>
-                    <th className="px-6 py-4">Signal</th>
-                    <th className="px-6 py-4">Spectrum</th>
-                    <th className="px-6 py-4 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800">
-                  {MOCK_NETWORKS.map((net) => (
-                    <tr key={net.id} className="hover:bg-slate-800/50 transition-colors">
-                      <td className="px-6 py-4 font-medium">{net.ssid} <br/><span className="text-[10px] text-slate-500">{net.macAddress}</span></td>
-                      <td className={`px-6 py-4 font-bold ${net.signalStrength > -60 ? 'text-green-500' : 'text-yellow-500'}`}>{net.signalStrength} dBm</td>
-                      <td className="px-6 py-4 text-slate-400 text-xs">CH {net.channel} | {net.frequencyBand}</td>
-                      <td className="px-6 py-4 text-right">
-                        <button className="text-blue-500 hover:text-white px-3 py-1.5 rounded-lg border border-blue-500/20 text-xs font-bold uppercase">Locate AP</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="bg-indigo-900/10 border border-indigo-500/20 p-6 rounded-2xl space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-indigo-400" /> AI Network Optimizer</h3>
-                <button onClick={handleAiOptimize} disabled={isOptimizing} className="text-xs bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-bold">
-                  {isOptimizing ? 'Analyzing...' : 'Run Analysis'}
-                </button>
-              </div>
-              {aiResult && (
-                <div className="text-sm space-y-2 animate-in slide-in-from-top-2">
-                  <p className="text-indigo-200">{aiResult.summary}</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    {aiResult.recommendations.map((rec, i) => (
-                      <div key={i} className="bg-slate-900/50 p-3 rounded-lg border border-indigo-500/10">
-                        <div className="font-bold text-xs text-indigo-400 mb-1">[{rec.priority}] {rec.category}</div>
-                        <div className="text-xs text-slate-400">{rec.description}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Analytics Tab */}
-        {activeTab === 'analytics' && (
-          <div className="space-y-8">
-            <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800">
-              <div className="flex justify-between items-center mb-12">
-                <h3 className="text-2xl font-bold">Throughput Analysis</h3>
-                <button onClick={performSpeedTest} disabled={speedTest.testing} className="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-xl font-bold flex items-center gap-2">
-                  {speedTest.testing ? <Loader2 className="animate-spin" /> : <Play />} Start Test
-                </button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                {[
-                  { label: 'Download', val: speedTest.download, unit: 'Mbps', color: '#3b82f6', max: 500 },
-                  { label: 'Upload', val: speedTest.upload, unit: 'Mbps', color: '#10b981', max: 200 },
-                  { label: 'Ping', val: speedTest.ping, unit: 'ms', color: '#f59e0b', max: 100 }
-                ].map((item, i) => (
-                  <div key={i} className="flex flex-col items-center">
-                    <div className="relative w-40 h-40">
-                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="45" fill="none" stroke="#1e293b" strokeWidth="8" />
-                        <circle cx="50" cy="50" r="45" fill="none" stroke={item.color} strokeWidth="8" strokeLinecap="round"
-                          strokeDasharray={`${(item.val / item.max) * 282.7} 282.7`} />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <div className="text-2xl font-black">{item.val}</div>
-                        <div className="text-[10px] text-slate-500 font-bold uppercase">{item.unit}</div>
-                      </div>
+        ) : (
+          /* STANDARD TABS */
+          <div className="animate-in fade-in duration-500">
+            {activeTab === 'dashboard' && (
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[
+                    { label: 'CAF Networks', value: '6', icon: Wifi, color: 'text-blue-500' },
+                    { label: 'Active APs', value: '18', icon: Router, color: 'text-cyan-500' },
+                    { label: 'Avg Signal', value: '-52 dBm', icon: Signal, color: 'text-purple-500' },
+                    { label: 'Network Health', value: '98%', icon: ShieldCheck, color: 'text-green-500' }
+                  ].map((stat, i) => (
+                    <div key={i} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 group hover:border-slate-700 transition-all">
+                      <div className={`p-3 rounded-xl bg-slate-800 ${stat.color} w-fit mb-4`}><stat.icon className="w-6 h-6" /></div>
+                      <div className="text-xs font-bold text-gray-500 uppercase mb-1">{stat.label}</div>
+                      <div className="text-2xl font-bold">{stat.value}</div>
                     </div>
-                    <div className="mt-4 font-bold text-slate-400 uppercase text-xs">{item.label}</div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800">
+                    <h3 className="text-sm font-bold mb-6 uppercase text-gray-400">Signal Strength Analysis</h3>
+                    <div className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={signalData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                          <XAxis dataKey="network" stroke="#64748b" fontSize={10} axisLine={false} tickLine={false} />
+                          <YAxis stroke="#64748b" fontSize={10} axisLine={false} tickLine={false} />
+                          <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '8px' }} />
+                          <Bar dataKey="strength" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Reports Tab */}
-        {activeTab === 'reports' && (
-          <div className="space-y-6">
-            {!selectedReport ? (
-              <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
-                <div className="p-6 border-b border-slate-800 flex justify-between items-center">
-                  <h3 className="font-bold text-lg">Audit Reports Registry</h3>
-                  <div className="flex gap-2">
-                    <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" /><input type="text" placeholder="Search..." className="pl-9 pr-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs outline-none" /></div>
-                    <button className="p-2 bg-slate-800 rounded-lg"><Filter className="w-4 h-4" /></button>
+                  <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800">
+                    <h3 className="text-sm font-bold mb-6 uppercase text-gray-400">Network Segment Distribution</h3>
+                    <div className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={typeData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} dataKey="value">
+                            {typeData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
                 </div>
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-800/50 text-[10px] uppercase font-bold text-slate-500">
-                    <tr>
-                      <th className="px-6 py-4 text-left">Location</th>
-                      <th className="px-6 py-4 text-left">Date</th>
-                      <th className="px-6 py-4 text-left">Networks</th>
-                      <th className="px-6 py-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800">
-                    {REPORTS_LIST.map((report) => (
-                      <tr key={report.id} className="hover:bg-slate-800/30">
-                        <td className="px-6 py-4 font-bold">{report.location}</td>
-                        <td className="px-6 py-4 text-slate-400">{report.date}</td>
-                        <td className="px-6 py-4">{report.networks} Detected</td>
-                        <td className="px-6 py-4 text-right">
-                          <button onClick={() => handleGenerateRecs(report)} className="text-blue-500 hover:underline font-bold text-xs uppercase flex items-center gap-1 ml-auto">
-                            <Eye className="w-3 h-3" /> View Analysis
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
-            ) : (
-              <div className="space-y-6 animate-in slide-in-from-right-4">
-                <button onClick={() => setSelectedReport(null)} className="text-xs flex items-center gap-1 text-slate-400 hover:text-white">
-                  <ChevronRight className="w-4 h-4 rotate-180" /> Back to Registry
-                </button>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800">
-                      <h2 className="text-2xl font-bold mb-2">{selectedReport.location}</h2>
-                      <p className="text-slate-500 text-sm mb-8">Generated Registry Audit: {selectedReport.date}</p>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {[
-                          { label: 'Total Networks', val: selectedReport.networks, icon: Wifi },
-                          { label: 'CAF APs', val: selectedReport.cafAps, icon: Router },
-                          { label: 'Avg Signal', val: selectedReport.avgSignal + ' dBm', icon: Signal },
-                          { label: 'Status', val: 'PASS', icon: ShieldCheck, color: 'text-green-500' }
-                        ].map((s, i) => (
-                          <div key={i} className="p-4 rounded-xl bg-slate-800/50 border border-slate-700">
-                            <s.icon className="w-4 h-4 text-slate-500 mb-2" />
-                            <div className="text-[10px] uppercase font-bold text-slate-500">{s.label}</div>
-                            <div className={`text-lg font-bold ${s.color || ''}`}>{s.val}</div>
+            )}
+
+            {activeTab === 'spectrum' && (
+              <div className="space-y-6">
+                <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      <Layers className="w-5 h-5 text-blue-500" /> Gaussian Spectrum Modeling
+                    </h3>
+                    <div className="flex gap-2 bg-slate-800 p-1 rounded-lg">
+                      {['2.4GHz', '5GHz'].map(b => (
+                        <button key={b} onClick={() => setSelectedBand(b as any)}
+                          className={`px-4 py-1.5 rounded-md text-[10px] font-bold transition-all ${selectedBand === b ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-white'}`}>
+                          {b}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="h-[400px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={spectrumGraphData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                        <XAxis dataKey="x" stroke="#64748b" fontSize={10} label={{ value: 'WiFi Channels', position: 'bottom', fill: '#64748b' }} />
+                        <YAxis stroke="#64748b" fontSize={10} />
+                        <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: 'none' }} />
+                        {MOCK_NETWORKS.filter(n => n.frequencyBand === selectedBand).map((net, i) => (
+                          <Area key={net.ssid} type="monotone" dataKey={net.ssid} stroke={COLORS[i % COLORS.length]} fill={COLORS[i % COLORS.length]} fillOpacity={0.3} />
+                        ))}
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'scanner' && (
+              <div className="space-y-6">
+                <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800">
+                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                    <Crosshair className="text-blue-500" /> Site Survey Professional
+                  </h3>
+                  <div className="flex gap-4">
+                    <div className="flex-1 relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                      <input type="text" value={locationName} onChange={(e) => setLocationName(e.target.value)}
+                        placeholder="e.g. B-Wing Server Room" className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-blue-500 text-white" />
+                    </div>
+                    <button onClick={startSiteSurvey} disabled={isScanning} className="bg-blue-600 hover:bg-blue-700 px-8 rounded-xl font-bold flex items-center gap-2">
+                      {isScanning ? <Loader2 className="animate-spin" /> : <Play />} Start Scan
+                    </button>
+                  </div>
+                </div>
+                <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
+                  <table className="w-full text-sm text-left">
+                    <thead className="bg-slate-800 text-xs font-bold uppercase tracking-wider text-slate-400">
+                      <tr>
+                        <th className="px-6 py-4">SSID / HW</th>
+                        <th className="px-6 py-4">Signal</th>
+                        <th className="px-6 py-4">Spectrum</th>
+                        <th className="px-6 py-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                      {MOCK_NETWORKS.map((net) => (
+                        <tr key={net.id} className="hover:bg-slate-800/50 transition-colors">
+                          <td className="px-6 py-4 font-medium">{net.ssid} <br/><span className="text-[10px] text-slate-500">{net.macAddress}</span></td>
+                          <td className={`px-6 py-4 font-bold ${net.signalStrength > -60 ? 'text-green-500' : 'text-yellow-500'}`}>{net.signalStrength} dBm</td>
+                          <td className="px-6 py-4 text-slate-400 text-xs">CH {net.channel} | {net.frequencyBand}</td>
+                          <td className="px-6 py-4 text-right">
+                            <button onClick={() => setTrackingNetwork(net)} className="text-blue-500 hover:text-white px-3 py-1.5 rounded-lg border border-blue-500/20 text-xs font-bold uppercase">Locate AP</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="bg-indigo-900/10 border border-indigo-500/20 p-6 rounded-2xl space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-indigo-400" /> AI Network Optimizer</h3>
+                    <button onClick={handleAiOptimize} disabled={isOptimizing} className="text-xs bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-bold">
+                      {isOptimizing ? 'Analyzing...' : 'Run Analysis'}
+                    </button>
+                  </div>
+                  {aiResult && (
+                    <div className="text-sm space-y-2">
+                      <p className="text-indigo-200">{aiResult.summary}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        {aiResult.recommendations.map((rec, i) => (
+                          <div key={i} className="bg-slate-900/50 p-3 rounded-lg border border-indigo-500/10">
+                            <div className="font-bold text-xs text-indigo-400 mb-1">[{rec.priority}] {rec.category}</div>
+                            <div className="text-xs text-slate-400">{rec.description}</div>
                           </div>
                         ))}
                       </div>
                     </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'analytics' && (
+              <div className="space-y-8">
+                <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800">
+                  <div className="flex justify-between items-center mb-12">
+                    <h3 className="text-2xl font-bold">Throughput Analysis</h3>
+                    <button onClick={performSpeedTest} disabled={speedTest.testing} className="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-xl font-bold flex items-center gap-2">
+                      {speedTest.testing ? <Loader2 className="animate-spin" /> : <Play />} Start Test
+                    </button>
                   </div>
-                  <div className="bg-indigo-900/20 border border-indigo-500/30 p-8 rounded-2xl shadow-2xl">
-                    <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-indigo-400" /> AI Report Insights
-                    </h3>
-                    {isGeneratingRecs ? (
-                      <div className="flex flex-col items-center justify-center py-12 text-slate-500">
-                        <Loader2 className="w-8 h-8 animate-spin mb-4" />
-                        <p className="text-xs font-bold">Analyzing scan data architecture...</p>
-                      </div>
-                    ) : recs && (
-                      <div className="space-y-6 text-sm">
-                        <div className="bg-slate-900/50 p-4 rounded-xl border border-indigo-500/10">
-                          <div className="text-[10px] uppercase font-bold text-indigo-400 mb-2">Summary</div>
-                          <p className="text-slate-300 leading-relaxed">{recs.issueSummary}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                    {[
+                      { label: 'Download', val: speedTest.download, unit: 'Mbps', color: '#3b82f6', max: 500 },
+                      { label: 'Upload', val: speedTest.upload, unit: 'Mbps', color: '#10b981', max: 200 },
+                      { label: 'Ping', val: speedTest.ping, unit: 'ms', color: '#f59e0b', max: 100 }
+                    ].map((item, i) => (
+                      <div key={i} className="flex flex-col items-center">
+                        <div className="relative w-40 h-40">
+                          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#1e293b" strokeWidth="8" />
+                            <circle cx="50" cy="50" r="45" fill="none" stroke={item.color} strokeWidth="8" strokeLinecap="round"
+                              strokeDasharray={`${(item.val / item.max) * 282.7} 282.7`} />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <div className="text-2xl font-black">{item.val}</div>
+                            <div className="text-[10px] text-slate-500 font-bold uppercase">{item.unit}</div>
+                          </div>
                         </div>
-                        <div className="space-y-3">
-                          <div className="text-[10px] uppercase font-bold text-indigo-400">Recommendations</div>
-                          {recs.recommendations.map((r, i) => (
-                            <div key={i} className="flex gap-3 text-xs text-slate-400">
-                              <div className="w-4 h-4 shrink-0 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[8px] font-bold">{i+1}</div>
-                              {r}
+                        <div className="mt-4 font-bold text-slate-400 uppercase text-xs">{item.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'reports' && (
+              <div className="space-y-6">
+                {!selectedReport ? (
+                  <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+                    <div className="p-6 border-b border-slate-800 flex justify-between items-center">
+                      <h3 className="font-bold text-lg">Audit Reports Registry</h3>
+                      <div className="flex gap-2">
+                        <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" /><input type="text" placeholder="Search..." className="pl-9 pr-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-xs outline-none" /></div>
+                        <button className="p-2 bg-slate-800 rounded-lg"><Filter className="w-4 h-4" /></button>
+                      </div>
+                    </div>
+                    <table className="w-full text-sm">
+                      <thead className="bg-slate-800/50 text-[10px] uppercase font-bold text-slate-500">
+                        <tr>
+                          <th className="px-6 py-4 text-left">Location</th>
+                          <th className="px-6 py-4 text-left">Date</th>
+                          <th className="px-6 py-4 text-left">Networks</th>
+                          <th className="px-6 py-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800">
+                        {REPORTS_LIST.map((report) => (
+                          <tr key={report.id} className="hover:bg-slate-800/30">
+                            <td className="px-6 py-4 font-bold">{report.location}</td>
+                            <td className="px-6 py-4 text-slate-400">{report.date}</td>
+                            <td className="px-6 py-4">{report.networks} Detected</td>
+                            <td className="px-6 py-4 text-right">
+                              <button onClick={() => handleGenerateRecs(report)} className="text-blue-500 hover:underline font-bold text-xs uppercase flex items-center gap-1 ml-auto">
+                                <Eye className="w-3 h-3" /> View Analysis
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <button onClick={() => setSelectedReport(null)} className="text-xs flex items-center gap-1 text-slate-400 hover:text-white">
+                      <ChevronRight className="w-4 h-4 rotate-180" /> Back to Registry
+                    </button>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      <div className="lg:col-span-2 space-y-6">
+                        <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800">
+                          <h2 className="text-2xl font-bold mb-2">{selectedReport.location}</h2>
+                          <p className="text-slate-500 text-sm mb-8">Generated Registry Audit: {selectedReport.date}</p>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {[
+                              { label: 'Total Networks', val: selectedReport.networks, icon: Wifi },
+                              { label: 'CAF APs', val: selectedReport.cafAps, icon: Router },
+                              { label: 'Avg Signal', val: selectedReport.avgSignal + ' dBm', icon: Signal },
+                              { label: 'Status', val: 'PASS', icon: ShieldCheck, color: 'text-green-500' }
+                            ].map((s, i) => (
+                              <div key={i} className="p-4 rounded-xl bg-slate-800/50 border border-slate-700">
+                                <s.icon className="w-4 h-4 text-slate-500 mb-2" />
+                                <div className="text-[10px] uppercase font-bold text-slate-500">{s.label}</div>
+                                <div className={`text-lg font-bold ${s.color || ''}`}>{s.val}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-indigo-900/20 border border-indigo-500/30 p-8 rounded-2xl shadow-2xl">
+                        <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+                          <Sparkles className="w-5 h-5 text-indigo-400" /> AI Insights
+                        </h3>
+                        {isGeneratingRecs ? (
+                          <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                            <Loader2 className="w-8 h-8 animate-spin mb-4" />
+                            <p className="text-xs font-bold">Analyzing architecture...</p>
+                          </div>
+                        ) : recs && (
+                          <div className="space-y-6 text-sm">
+                            <div className="bg-slate-900/50 p-4 rounded-xl border border-indigo-500/10">
+                              <p className="text-slate-300 leading-relaxed">{recs.issueSummary}</p>
                             </div>
-                          ))}
+                            <div className="space-y-3">
+                              {recs.recommendations.map((r, i) => (
+                                <div key={i} className="flex gap-3 text-xs text-slate-400">
+                                  <div className="w-4 h-4 shrink-0 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[8px] font-bold">{i+1}</div>
+                                  {r}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'admin' && (
+              <div className="space-y-8">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold">Organization & Security</h2>
+                    <p className="text-slate-500 text-sm">Technician metrics & field integrity</p>
+                  </div>
+                  <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2">
+                    <UserPlus className="w-4 h-4" /> Add Technician
+                  </button>
+                </div>
+                <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-800/30 text-[10px] font-bold uppercase text-slate-500">
+                        <th className="px-6 py-4 text-left">Technician</th>
+                        <th className="px-6 py-4 text-left">Role</th>
+                        <th className="px-6 py-4 text-left">Scans</th>
+                        <th className="px-6 py-4 text-left">Performance</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                      {TEAM_MEMBERS.map((member) => (
+                        <tr key={member.id} className="hover:bg-slate-800/30">
+                          <td className="px-6 py-4 font-bold">{member.name}</td>
+                          <td className="px-6 py-4"><span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">{member.role}</span></td>
+                          <td className="px-6 py-4 font-mono font-bold text-blue-500">{member.scans}</td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-blue-500" style={{ width: `${member.performance}%` }} />
+                              </div>
+                              <span className="text-[10px] font-bold text-slate-500">{member.performance}%</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'settings' && (
+              <div className="max-w-2xl mx-auto space-y-6">
+                <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800">
+                  <h2 className="text-2xl font-bold mb-6">System Preferences</h2>
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between p-4 bg-slate-800 rounded-2xl">
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-slate-700 rounded-lg">{darkMode ? <Moon className="w-5 h-5 text-yellow-500" /> : <Sun className="w-5 h-5 text-yellow-500" />}</div>
+                        <div>
+                          <div className="text-sm font-bold">Dark Interface</div>
+                          <div className="text-[10px] text-slate-500">Enable high-contrast mode</div>
                         </div>
                       </div>
-                    )}
+                      <button onClick={() => setDarkMode(!darkMode)} className={`w-12 h-6 rounded-full transition-all relative ${darkMode ? 'bg-blue-600' : 'bg-slate-600'}`}>
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${darkMode ? 'right-1' : 'left-1'}`} />
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between p-4 bg-slate-800 rounded-2xl">
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-slate-700 rounded-lg"><Volume2 className="w-5 h-5 text-green-500" /></div>
+                        <div>
+                          <div className="text-sm font-bold">Audio Locator</div>
+                          <div className="text-[10px] text-slate-500">Enable Geiger-counter feedback</div>
+                        </div>
+                      </div>
+                      <button onClick={() => setAudioEnabled(!audioEnabled)} className={`w-12 h-6 rounded-full transition-all relative ${audioEnabled ? 'bg-blue-600' : 'bg-slate-600'}`}>
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${audioEnabled ? 'right-1' : 'left-1'}`} />
+                      </button>
+                    </div>
                   </div>
+                </div>
+                <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800 text-center">
+                  <p className="text-[10px] font-mono text-slate-500">v3.6.0-ENTERPRISE-PROD | FIPS-140-2 COMPLIANT</p>
+                  <p className="text-[10px] text-slate-600 mt-2">© 2024 CAF-WIFI Operations | GDIT INFRASTRUCTURE</p>
                 </div>
               </div>
             )}
           </div>
         )}
-
-        {/* Admin Tab */}
-        {activeTab === 'admin' && (
-          <div className="space-y-8">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold">Organization & Security</h2>
-                <p className="text-slate-500 text-sm">Monitor system integrity and technician field metrics</p>
-              </div>
-              <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2">
-                <UserPlus className="w-4 h-4" /> Add Technician
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { label: 'Security Events', val: '0', icon: BadgeAlert, color: 'text-green-500', sub: 'Last 24 hours' },
-                { label: 'System Uptime', val: '99.98%', icon: Clock, color: 'text-blue-500', sub: 'High Availability' },
-                { label: 'Field Reliability', val: '94.2%', icon: ShieldCheck, color: 'text-indigo-500', sub: 'Signal Compliance' }
-              ].map((s, i) => (
-                <div key={i} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-lg">
-                  <div className={`p-3 rounded-xl bg-slate-800 ${s.color} w-fit mb-4`}><s.icon className="w-5 h-5" /></div>
-                  <div className="text-xs font-bold text-slate-500 uppercase">{s.label}</div>
-                  <div className="text-2xl font-bold my-1">{s.val}</div>
-                  <div className="text-[10px] text-slate-600 font-bold">{s.sub}</div>
-                </div>
-              ))}
-            </div>
-
-            <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
-              <div className="p-6 border-b border-slate-800 font-bold uppercase tracking-widest text-xs text-slate-500">Technician Performance Registry</div>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-slate-800/30 text-[10px] font-bold uppercase text-slate-500">
-                    <th className="px-6 py-4 text-left">Technician</th>
-                    <th className="px-6 py-4 text-left">Role</th>
-                    <th className="px-6 py-4 text-left">Lifetime Scans</th>
-                    <th className="px-6 py-4 text-left">Performance</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800">
-                  {TEAM_MEMBERS.map((member) => (
-                    <tr key={member.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center"><User className="w-4 h-4 text-slate-500" /></div>
-                          <span className="font-bold">{member.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4"><span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">{member.role}</span></td>
-                      <td className="px-6 py-4 font-mono font-bold text-blue-500">{member.scans}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-blue-500" style={{ width: `${member.performance}%` }} />
-                          </div>
-                          <span className="text-[10px] font-bold text-slate-500">{member.performance}%</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button className="text-slate-500 hover:text-white"><MoreVertical className="w-4 h-4" /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
       </main>
-
-      <footer className="max-w-7xl mx-auto px-6 py-10 border-t border-slate-900">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-          <div>
-            <div className="text-sm font-bold">Hany Bkhite</div>
-            <div className="text-xs">Senior Infrastructure Developer</div>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] font-black uppercase tracking-tighter">NetPulse CAF Operations</div>
-            <div className="text-[9px] font-mono mt-1">v3.6.0-ENTERPRISE-PROD | FIPS-140-2 COMPLIANT</div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
