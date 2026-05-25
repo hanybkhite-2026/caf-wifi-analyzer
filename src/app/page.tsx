@@ -1,17 +1,23 @@
-
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
+  PieChart, Pie, Cell, AreaChart, Area, LineChart, Line 
+} from 'recharts';
 import { 
   Wifi, Sun, Moon, Settings, BarChart3, Network, TrendingUp, 
-  Activity, Zap, Volume2, VolumeX, LogOut, Mail, Lock, 
-  Globe, Loader2, Signal, Router, 
-  ShieldCheck, Crosshair, MapPin, Play, X, FileText, 
-  Layers, AlertTriangle, UserPlus, CheckCircle2, Clock, 
-  Trash2, Filter, Sparkles, ChevronRight, Download, Search, Info,
-  Radio, LayoutDashboard, FileUp, Users, LineChart as LineChartIcon
+  Activity, Zap, Volume2, VolumeX, Crosshair, MapPin, Play, 
+  Loader2, X, Lock, Mail, ShieldCheck, LogOut, Info, Radio, 
+  LayoutDashboard, FileUp, Users, LineChart as LineChartIcon,
+  ChevronDown, Star, AlertTriangle, AlertCircle, RefreshCw,
+  MoreVertical, Trash2, UserPlus, CheckCircle2, Clock, 
+  Search, Filter, Download, Eye, ChevronRight, FileText, Router, Signal as SignalIcon, Layers
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+
+// Mock Data
+import { MOCK_NETWORKS, WEEKLY_ACTIVITY, SPEED_HISTORY, TEAM_MEMBERS, REPORTS } from "@/lib/mock-data";
 
 // Components
 import { DashboardTab } from "@/components/dashboard/dashboard-tab";
@@ -28,7 +34,7 @@ export default function CAFWiFiAnalyzer() {
   const { toast } = useToast();
 
   // Auth State
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true); // Default to true for preview/MVP
   const [email, setEmail] = useState('admin@caf.com');
   const [password, setPassword] = useState('admin123');
   const [loginError, setLoginError] = useState('');
@@ -41,9 +47,10 @@ export default function CAFWiFiAnalyzer() {
     setIsMounted(true);
   }, []);
 
+  // Configuration for Navigation
   const tabs = useMemo(() => [
     { id: "access-points", label: "Access Points", icon: Radio },
-    { id: "channel-rating", label: "Channel Rating", icon: Signal },
+    { id: "channel-rating", label: "Channel Rating", icon: SignalIcon },
     { id: "channel-graph", label: "Channel Graph", icon: LayoutDashboard },
     { id: "time-graph", label: "Time Graph", icon: LineChartIcon },
     { id: "export", label: "Export", icon: FileUp },
@@ -109,9 +116,9 @@ export default function CAFWiFiAnalyzer() {
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-[#0f172a] text-white' : 'bg-slate-50 text-slate-900'} font-body transition-colors duration-300`}>
-      <div className="flex">
+      <div className="flex h-screen overflow-hidden">
         {/* Sidebar Nav */}
-        <aside className={`w-20 lg:w-64 border-r ${darkMode ? 'border-slate-800 bg-slate-900/50' : 'border-slate-200 bg-white'} h-screen sticky top-0 flex flex-col hidden md:flex`}>
+        <aside className={`w-20 lg:w-64 border-r ${darkMode ? 'border-slate-800 bg-slate-900/50' : 'border-slate-200 bg-white'} flex flex-col hidden md:flex`}>
           <div className="p-6 border-b border-inherit">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
@@ -145,7 +152,7 @@ export default function CAFWiFiAnalyzer() {
         </aside>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top Header */}
           <header className={`h-16 border-b flex items-center justify-between px-8 sticky top-0 z-40 backdrop-blur-md ${darkMode ? 'bg-[#0f172a]/80 border-slate-800' : 'bg-white/80 border-slate-200'}`}>
             <div className="flex items-center gap-4">
@@ -154,7 +161,7 @@ export default function CAFWiFiAnalyzer() {
               </h2>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-bold border border-blue-500/20 uppercase tracking-widest">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-bold border border-blue-500/20 uppercase tracking-widest">
                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
                 Aruba Analysis Mode
               </div>
@@ -164,7 +171,7 @@ export default function CAFWiFiAnalyzer() {
             </div>
           </header>
 
-          <main className="flex-1 p-8 overflow-y-auto no-scrollbar">
+          <main className="flex-1 p-8 overflow-y-auto no-scrollbar bg-inherit">
             <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
               {activeTab === 'access-points' && <ScannerTab />}
               {activeTab === 'channel-rating' && <ChannelRatingTab />}

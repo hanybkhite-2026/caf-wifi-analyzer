@@ -43,6 +43,7 @@ export function DashboardTab() {
     for (let i = minChan; i <= maxChan; i += 0.5) {
       const point: any = { channel: i };
       MOCK_NETWORKS.filter(n => n.frequencyBand === band).forEach(net => {
+        // Simple Gaussian bell curve simulation
         const dist = Math.abs(i - net.channel);
         if (dist <= 2) {
           const strength = Math.max(0, (net.signalStrength + 100));
@@ -195,8 +196,8 @@ export function DashboardTab() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={signalData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                <XAxis dataKey="network" fontSize={10} stroke="#888888" />
-                <YAxis fontSize={12} stroke="#888888" domain={[0, 100]} label={{ value: 'dBm (Abs)', angle: -90, position: 'insideLeft' }} />
+                <XAxis dataKey="network" fontSize={10} stroke="#888" axisLine={false} tickLine={false} />
+                <YAxis fontSize={12} stroke="#888" domain={[0, 100]} label={{ value: 'dBm (Abs)', angle: -90, position: 'insideLeft', fill: '#888' }} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'rgba(23, 23, 23, 0.8)', border: 'none', borderRadius: '8px' }}
                   itemStyle={{ color: '#ffffff' }}
