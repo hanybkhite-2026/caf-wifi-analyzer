@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Wifi, Sun, Moon, Settings, BarChart3, Network, TrendingUp, 
   Activity, Zap, Volume2, VolumeX, LogOut, Mail, Lock, 
@@ -8,7 +8,7 @@ import {
   ShieldCheck, Crosshair, MapPin, Play, X, FileText, Smartphone, Monitor, 
   Layers, AlertTriangle, UserPlus, CheckCircle2, Clock, MoreVertical, 
   Trash2, Filter, Sparkles, ChevronRight, Download, Search, BadgeAlert, User,
-  Radio, LayoutDashboard, FileUp, Users, Info
+  Radio, LayoutDashboard, FileUp, Users, Info, LineChart
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -15,26 +14,23 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export function DashboardTab() {
   const [band, setBand] = useState<'2.4GHz' | '5GHz'>('5GHz');
 
-  const performanceData = MOCK_NETWORKS.map(n => ({
+  const performanceData = useMemo(() => MOCK_NETWORKS.map(n => ({
     name: n.ssid,
     signal: Math.abs(n.signalStrength),
     bandwidth: n.bandwidthMbps,
     interference: n.interferenceScore * 10,
-  }));
+  })), []);
 
-  const typeData = [
+  const signalData = useMemo(() => MOCK_NETWORKS.map(n => ({
+    network: n.ssid,
+    strength: Math.abs(n.signalStrength)
+  })), []);
+
+  const typeData = useMemo(() => [
     { name: 'Main', value: MOCK_NETWORKS.filter(n => n.networkType === 'Main').length },
     { name: 'Guest', value: MOCK_NETWORKS.filter(n => n.networkType === 'Guest').length },
     { name: 'IoT', value: MOCK_NETWORKS.filter(n => n.networkType === 'IoT').length },
-  ];
-
-  const radarData = [
-    { subject: 'Interference', A: 120, fullMark: 150 },
-    { subject: 'Congestion', A: 98, fullMark: 150 },
-    { subject: 'Reliability', A: 86, fullMark: 150 },
-    { subject: 'Coverage', A: 99, fullMark: 150 },
-    { subject: 'Speed', A: 85, fullMark: 150 },
-  ];
+  ], []);
 
   // Logic to generate the "humps" for the Channel Graph
   const channelGraphData = useMemo(() => {
@@ -75,7 +71,7 @@ export function DashboardTab() {
           { title: "Avg Signal", value: "-52 dBm", icon: Signal, color: "text-purple-500" },
           { title: "Network Health", value: "98%", icon: ShieldCheck, color: "text-green-500" },
         ].map((stat, i) => (
-          <Card key={i} className="glass border-none shadow-md overflow-hidden relative">
+          <Card key={i} className="bg-card/50 backdrop-blur-md border-none shadow-md overflow-hidden relative">
             <div className={`absolute top-0 right-0 p-4 opacity-10 ${stat.color}`}>
               <stat.icon className="w-12 h-12" />
             </div>
@@ -95,7 +91,7 @@ export function DashboardTab() {
       </div>
 
       {/* Channel Graph - Professional Spectral View */}
-      <Card className="glass border-none shadow-lg overflow-hidden">
+      <Card className="bg-card/50 backdrop-blur-md border-none shadow-lg overflow-hidden">
         <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <CardTitle className="text-lg font-headline flex items-center gap-2">
@@ -150,7 +146,7 @@ export function DashboardTab() {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="glass border-none shadow-lg">
+        <Card className="bg-card/50 backdrop-blur-md border-none shadow-lg">
           <CardHeader>
             <CardTitle className="text-lg font-headline flex items-center gap-2">
               <Activity className="w-5 h-5 text-blue-500" /> SSID Bandwidth Distribution
@@ -172,7 +168,7 @@ export function DashboardTab() {
           </CardContent>
         </Card>
 
-        <Card className="glass border-none shadow-lg">
+        <Card className="bg-card/50 backdrop-blur-md border-none shadow-lg">
           <CardHeader>
             <CardTitle className="text-lg font-headline flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-orange-500" /> Interference Analysis
@@ -196,26 +192,26 @@ export function DashboardTab() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 glass border-none">
+        <Card className="lg:col-span-2 bg-card/50 backdrop-blur-md border-none shadow-lg">
           <CardHeader>
             <CardTitle className="text-lg font-headline">Signal Strength Comparison</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={performanceData}>
-                <XAxis dataKey="name" fontSize={10} stroke="#888888" />
+              <BarChart data={signalData}>
+                <XAxis dataKey="network" fontSize={10} stroke="#888888" />
                 <YAxis fontSize={12} stroke="#888888" domain={[0, 100]} label={{ value: 'dBm (Abs)', angle: -90, position: 'insideLeft' }} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'rgba(23, 23, 23, 0.8)', border: 'none', borderRadius: '8px' }}
                   itemStyle={{ color: '#ffffff' }}
                 />
-                <Bar dataKey="signal" fill="#a855f7" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="strength" fill="#a855f7" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card className="glass border-none">
+        <Card className="bg-card/50 backdrop-blur-md border-none shadow-lg">
           <CardHeader>
             <CardTitle className="text-lg font-headline">Network Type Distribution</CardTitle>
           </CardHeader>
@@ -241,7 +237,7 @@ export function DashboardTab() {
             <div className="mt-4 flex flex-wrap justify-center gap-4">
               {typeData.map((entry, index) => (
                 <div key={index} className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index] }} />
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
                   <span className="text-xs text-muted-foreground">{entry.name}</span>
                 </div>
               ))}
