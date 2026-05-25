@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -12,20 +13,17 @@ import {
   Play, 
   Loader2, 
   Wand2, 
-  RefreshCw, 
   Volume2, 
   VolumeX, 
   Crosshair, 
   X, 
-  Info, 
   Wifi, 
   Lock, 
-  ShieldAlert 
+  AlertTriangle 
 } from "lucide-react";
 import { aiNetworkOptimizer, type AiNetworkOptimizerOutput } from "@/ai/flows/ai-network-optimizer";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 
 export function ScannerTab() {
   const [location, setLocation] = useState("");
@@ -47,14 +45,14 @@ export function ScannerTab() {
 
   const startScan = () => {
     if (!location) {
-      toast({ title: "Error", description: "Please enter a location first.", variant: "destructive" });
+      toast({ title: "Audit Error", description: "Location name required for registry entry.", variant: "destructive" });
       return;
     }
     setIsScanning(true);
     setTimeout(() => {
       setIsScanning(false);
-      toast({ title: "Scan Complete", description: `Found ${networks.length} CAF networks in ${location}.` });
-    }, 3000);
+      toast({ title: "Audit Complete", description: `Discovered ${networks.length} infrastructure nodes.` });
+    }, 2500);
   };
 
   const handleAiOptimize = async () => {
@@ -63,69 +61,50 @@ export function ScannerTab() {
       const result = await aiNetworkOptimizer({ networkScans: networks });
       setAiResult(result);
     } catch (error) {
-      toast({ title: "Optimization Failed", description: "Could not connect to AI service.", variant: "destructive" });
+      toast({ title: "Analysis Failed", description: "Cloud AI engine unreachable.", variant: "destructive" });
     } finally {
       setIsOptimizing(false);
     }
   };
 
-  // Signal Tracking Logic
+  // Web Audio Geiger Counter Logic
   useEffect(() => {
     if (trackingNetwork) {
       setCurrentSignal(trackingNetwork.signalStrength);
-      
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
 
       const playBeep = () => {
         if (isMuted || !audioContextRef.current) return;
-        
         const osc = audioContextRef.current.createOscillator();
         const gain = audioContextRef.current.createGain();
-        
         osc.type = 'sine';
-        const freq = 400 + (Math.abs(currentSignal) < 40 ? 400 : 0) + (Math.abs(currentSignal + 90) * 2);
+        const freq = 400 + (Math.abs(currentSignal) < 40 ? 400 : 0) + (Math.abs(currentSignal + 90) * 2.5);
         osc.frequency.setValueAtTime(freq, audioContextRef.current.currentTime);
-        
         gain.gain.setValueAtTime(0.1, audioContextRef.current.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioContextRef.current.currentTime + 0.1);
-        
         osc.connect(gain);
         gain.connect(audioContextRef.current.destination);
-        
         osc.start();
         osc.stop(audioContextRef.current.currentTime + 0.1);
       };
 
       const updateInterval = () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
-        
-        const delay = Math.max(50, (Math.abs(currentSignal) - 30) * 15);
+        const delay = Math.max(60, (Math.abs(currentSignal) - 30) * 12);
         intervalRef.current = setInterval(() => {
           playBeep();
           setCurrentSignal(prev => {
-            const fluctuation = (Math.random() - 0.5) * 4;
-            const newVal = prev + fluctuation;
-            return Math.min(-30, Math.max(-95, newVal));
+            const fluctuation = (Math.random() - 0.5) * 5;
+            return Math.min(-30, Math.max(-95, prev + fluctuation));
           });
         }, delay);
       };
-
       updateInterval();
-    } else {
-      if (intervalRef.current) clearInterval(intervalRef.current);
     }
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [trackingNetwork, currentSignal, isMuted]);
-
-  const stopTracking = () => {
-    setTrackingNetwork(null);
-    if (intervalRef.current) clearInterval(intervalRef.current);
-  };
 
   const getSignalColor = (dBm: number) => {
     if (dBm >= -55) return "text-green-500";
@@ -133,168 +112,141 @@ export function ScannerTab() {
     return "text-red-500";
   };
 
-  const getSignalPercent = (dBm: number) => {
-    const min = -100;
-    const max = -30;
-    return Math.min(100, Math.max(0, ((dBm - min) / (max - min)) * 100));
-  };
-
   return (
-    <div className="space-y-4 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-5xl mx-auto font-body">
       {trackingNetwork ? (
-        <Card className="glass border-primary/50 shadow-2xl animate-in zoom-in-95 duration-300">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <Card className="glass border-blue-500/50 shadow-2xl animate-in zoom-in-95 duration-300 bg-slate-900/40">
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
             <div>
-              <CardTitle className="text-2xl font-headline flex items-center gap-2">
-                <Crosshair className="w-6 h-6 text-primary animate-pulse" />
-                Locating Hidden AP: {trackingNetwork.ssid}
+              <CardTitle className="text-2xl font-headline font-bold flex items-center gap-3">
+                <Crosshair className="w-8 h-8 text-blue-500 animate-pulse" />
+                Locating Hardware: {trackingNetwork.ssid}
               </CardTitle>
-              <CardDescription className="flex items-center gap-2">
-                <Badge variant="secondary">{trackingNetwork.vendor}</Badge>
-                <span className="font-mono text-xs">{trackingNetwork.macAddress}</span>
+              <CardDescription className="flex items-center gap-3 font-mono text-xs mt-1">
+                <Badge variant="outline" className="border-blue-500/30 text-blue-400">{trackingNetwork.vendor}</Badge>
+                <span>MAC: {trackingNetwork.macAddress}</span>
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => setIsMuted(!isMuted)}>
+              <Button variant="secondary" size="icon" onClick={() => setIsMuted(!isMuted)} className="bg-slate-800">
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </Button>
-              <Button variant="ghost" size="icon" onClick={stopTracking}>
+              <Button variant="secondary" size="icon" onClick={() => setTrackingNetwork(null)} className="bg-slate-800 hover:text-red-500">
                 <X className="w-5 h-5" />
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="py-8 space-y-8 text-center">
-            <div className="text-6xl font-bold font-headline mb-4">
+          <CardContent className="py-12 space-y-10 text-center">
+            <div className="text-9xl font-black font-headline tracking-tighter text-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
               {Math.round(currentSignal)}
-              <span className="text-xl ml-1 text-muted-foreground">dBm</span>
+              <span className="text-2xl ml-2 text-slate-500">dBm</span>
             </div>
-            <Progress value={getSignalPercent(currentSignal)} className="h-4 max-w-md mx-auto" />
-            <p className="text-sm text-muted-foreground mt-4">
-              Beep frequency increases as you approach the <strong>Aruba AP</strong>.
-            </p>
+            <div className="max-w-xl mx-auto space-y-4">
+              <Progress value={Math.min(100, Math.max(0, (currentSignal + 100) * 1.5))} className="h-6" />
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                Geiger feedback rate increases as proximity to <span className="text-blue-500">Aruba Radio</span> improves.
+              </p>
+            </div>
           </CardContent>
         </Card>
       ) : (
         <>
           {/* Current Connection Header */}
           {currentConnection && (
-            <div className="bg-secondary/40 p-4 rounded-xl border-l-4 border-primary space-y-1">
-              <p className="text-primary text-xs font-bold uppercase tracking-widest">Current connection</p>
-              <div className="flex justify-between items-baseline">
-                <h3 className="text-lg font-bold font-headline">{currentConnection.ssid} ({currentConnection.macAddress})</h3>
-                <span className="text-xs font-mono text-blue-400">{currentConnection.ipAddress}</span>
-              </div>
-              <div className="flex gap-4 text-xs font-medium">
-                <span className={getSignalColor(currentConnection.signalStrength)}>{currentConnection.signalStrength}dBm</span>
-                <span>CH <span className="text-blue-400">{currentConnection.channel}</span> {currentConnection.frequencyMHz}MHz</span>
-                <span className="text-cyan-400">{currentConnection.distance}</span>
-                <span className="text-blue-500 font-bold">{currentConnection.bandwidthMbps}Mbps</span>
-              </div>
-            </div>
+            <Card className="bg-blue-600/5 border-l-4 border-l-blue-600 border-inherit">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold text-blue-500 uppercase tracking-[0.2em]">Live Connection Diagnostics</span>
+                  <Badge variant="outline" className="text-[9px] border-blue-500/20 text-blue-400 font-mono">IP: {currentConnection.ipAddress}</Badge>
+                </div>
+                <div className="flex justify-between items-end">
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-bold font-headline">{currentConnection.ssid}</h3>
+                    <p className="text-[10px] font-mono text-slate-500 uppercase">{currentConnection.vendor} | HW: {currentConnection.macAddress}</p>
+                  </div>
+                  <div className="flex gap-8 text-[11px] font-bold">
+                    <div className="text-center">
+                      <div className={getSignalColor(currentConnection.signalStrength)}>{currentConnection.signalStrength} dBm</div>
+                      <div className="text-[8px] text-slate-500 uppercase mt-1">Signal</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-blue-500">CH {currentConnection.channel}</div>
+                      <div className="text-[8px] text-slate-500 uppercase mt-1">{currentConnection.frequencyMHz} MHz</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-cyan-400">{currentConnection.bandwidthMbps} Mbps</div>
+                      <div className="text-[8px] text-slate-500 uppercase mt-1">Throughput</div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Warning Banner */}
-          <div className="flex items-center gap-2 p-3 bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg text-xs font-bold justify-center">
-            <X className="w-4 h-4" /> Wi-Fi scan throttling is enabled
+          <div className="flex items-center gap-3 p-3 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl text-[10px] font-bold uppercase tracking-widest justify-center">
+            <AlertTriangle className="w-4 h-4" /> Wi-Fi scan throttling is active. Accuracy may vary.
           </div>
 
-          <div className="flex flex-col md:flex-row gap-4 items-end glass p-4 rounded-xl">
-            <div className="flex-1 space-y-2 w-full">
-              <label className="text-xs font-bold uppercase text-muted-foreground flex items-center">
-                <MapPin className="w-3 h-3 mr-1" /> Scan Location
+          <div className="flex flex-col md:flex-row gap-4 p-6 rounded-2xl bg-slate-900/50 border border-slate-800">
+            <div className="flex-1 space-y-2">
+              <label className="text-[10px] font-bold uppercase text-slate-500 flex items-center tracking-widest">
+                <MapPin className="w-3 h-3 mr-2" /> Audit Environment
               </label>
               <Input 
-                placeholder="e.g., Floor 1, Office A" 
+                placeholder="e.g., Data Center Rack B-12" 
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="bg-background/50"
+                className="bg-slate-800/50 border-slate-700 h-11"
               />
             </div>
-            <Button onClick={startScan} disabled={isScanning} className="gradient-blue-cyan h-10 px-8 w-full md:w-auto">
+            <Button onClick={startScan} disabled={isScanning} className="bg-blue-600 hover:bg-blue-700 h-11 px-10 self-end font-bold uppercase tracking-widest text-xs">
               {isScanning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
-              {isScanning ? "Scanning..." : "Start Scan"}
+              {isScanning ? "Scanning..." : "Start Site Audit"}
             </Button>
           </div>
 
-          {/* Network List Items */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between px-2">
-              <h4 className="text-xs font-bold uppercase text-muted-foreground">Nearby Access Points</h4>
-              {isScanning && <div className="text-[10px] text-blue-500 animate-pulse font-bold">LIVE SCANNING...</div>}
+          {/* Network Registry */}
+          <div className="bg-slate-900/30 rounded-2xl border border-slate-800 overflow-hidden">
+            <div className="p-4 bg-slate-800/30 border-b border-slate-800 flex justify-between items-center">
+              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Discovery Registry</h4>
+              {isScanning && <div className="text-[9px] text-blue-500 animate-pulse font-bold tracking-widest">REAL-TIME SPECTRAL SCAN...</div>}
             </div>
-            
-            <div className="space-y-0.5">
+            <div className="divide-y divide-slate-800">
               {networks.map((network) => (
-                <div key={network.id} className="bg-card/30 hover:bg-card/50 transition-colors border-b border-border p-4 first:rounded-t-xl last:rounded-b-xl">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="space-y-0.5">
+                <div key={network.id} className="p-4 hover:bg-blue-600/5 transition-colors group flex items-center justify-between">
+                  <div className="flex items-center gap-5">
+                    <div className={`w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center relative ${getSignalColor(network.signalStrength)}/10`}>
+                      <Wifi className={`w-6 h-6 ${getSignalColor(network.signalStrength)}`} />
+                      <div className="absolute -top-1 -right-1 text-[8px] font-bold bg-slate-700 px-1.5 py-0.5 rounded-md border border-slate-600">{network.channel}</div>
+                    </div>
+                    <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm">{network.ssid}</span>
-                        <span className="text-[10px] text-muted-foreground font-mono">({network.macAddress})</span>
+                        <span className="font-bold text-sm tracking-tight">{network.ssid}</span>
+                        {network.encryption.includes('WPA') && <Lock className="w-3 h-3 text-slate-500" />}
                       </div>
-                      <div className="flex gap-3 text-[11px] font-mono">
-                        <span className={`font-bold ${getSignalColor(network.signalStrength)}`}>{network.signalStrength}dBm</span>
-                        <span>CH <span className="text-blue-400">{network.channel}</span> {network.frequencyMHz}MHz</span>
-                        <span className="text-cyan-400">{network.distance}</span>
-                      </div>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => setTrackingNetwork(network)} 
-                      className="h-8 px-2 text-[10px] font-bold text-primary border border-primary/20 hover:bg-primary/10"
-                    >
-                      <Crosshair className="w-3.5 h-3.5 mr-1" /> LOCATE
-                    </Button>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    {/* Signal Icon */}
-                    <div className="w-10 h-10 flex items-center justify-center relative">
-                      <Wifi className={`w-8 h-8 ${getSignalColor(network.signalStrength)}`} />
-                      <div className="absolute bottom-0 right-0">
-                        {network.encryption.includes('WPA') ? <Lock className="w-3 h-3 text-muted-foreground" /> : null}
-                      </div>
-                      <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-secondary px-1 rounded">{network.channel}</span>
-                    </div>
-
-                    <div className="flex-1 space-y-1">
-                      <div className="flex justify-between text-[10px] uppercase font-bold">
-                        <span className="text-cyan-400">{network.frequencyRange}</span>
-                        <span className="text-muted-foreground truncate max-w-[120px]">{network.vendor}</span>
-                      </div>
-                      <div className="text-[10px] font-mono text-muted-foreground/80">
-                        {network.encryption}
+                      <div className="flex gap-4 text-[10px] font-mono text-slate-500">
+                        <span className={`font-bold ${getSignalColor(network.signalStrength)}`}>{network.signalStrength} dBm</span>
+                        <span className="uppercase tracking-tighter">{network.vendor}</span>
+                        <span className="text-cyan-600">{network.frequencyRange}</span>
                       </div>
                     </div>
                   </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setTrackingNetwork(network)} 
+                    className="h-8 px-4 text-[9px] font-bold uppercase tracking-widest border-blue-500/20 text-blue-500 hover:bg-blue-600 hover:text-white transition-all"
+                  >
+                    <Crosshair className="w-3 h-3 mr-2" /> Locate AP
+                  </Button>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* AI Insights Sidebar */}
-          <Card className="glass border-none gradient-card-purple">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-headline flex items-center gap-2">
-                <Wand2 className="w-4 h-4 text-purple-500" /> AI Insights
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {!aiResult ? (
-                <Button onClick={handleAiOptimize} disabled={isOptimizing} variant="outline" className="w-full text-xs">
-                  {isOptimizing ? "Analyzing..." : "Analyze Scan Data"}
-                </Button>
-              ) : (
-                <div className="space-y-2 text-xs">
-                  <p className="bg-purple-500/10 p-2 rounded">{aiResult.summary}</p>
-                  <Button onClick={() => setAiResult(null)} variant="ghost" className="w-full h-6 text-[10px]">Clear</Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </>
       )}
     </div>
   );
 }
+
