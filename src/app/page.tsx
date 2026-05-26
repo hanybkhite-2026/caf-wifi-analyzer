@@ -5,131 +5,72 @@ import {
   AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
-
-// ── STYLES (Custom High-Density Theme) ──────────────────────────────────────
-const c = {
-  bg: '#0a0f1e', sidebar: '#0d1526', card: '#111827', card2: '#1a2235',
-  border: '#1e2d45', blue: '#3b82f6', cyan: '#06b6d4', green: '#22c55e',
-  yellow: '#f59e0b', red: '#ef4444', purple: '#a855f7', text: '#e2e8f0',
-  muted: '#64748b', dim: '#94a3b8',
-};
-
-const S = {
-  app: { display:'flex', minHeight:'100vh', background:c.bg, color:c.text, fontFamily:"'Inter','Segoe UI',sans-serif" },
-  sidebar: { width:'185px', minHeight:'100vh', background:c.sidebar, borderRight:`1px solid ${c.border}`, display:'flex', flexDirection:'column', padding:'20px 12px', position:'sticky', top:0, height:'100vh', overflowY:'auto', flexShrink:0 },
-  main: { flex:1, display:'flex', flexDirection:'column', overflow:'auto' },
-  topbar: { background:c.sidebar, borderBottom:`1px solid ${c.border}`, padding:'12px 24px', display:'flex', justifyContent:'space-between', alignItems:'center', position:'sticky', top:0, zIndex:10 },
-  content: { padding:'28px', flex:1 },
-  logoWrap: { display:'flex', alignItems:'center', gap:'10px', marginBottom:'32px', padding:'0 4px' },
-  logoIcon: { width:'34px', height:'34px', background:'linear-gradient(135deg,#3b82f6,#1d4ed8)', borderRadius:'8px', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'16px', flexShrink:0 },
-  logoText: { fontSize:'14px', fontWeight:'700', color:c.text },
-  nav: { display:'flex', flexDirection:'column', gap:'2px', flex:1 },
-  navItem: (a: boolean) => ({ display:'flex', alignItems:'center', gap:'10px', padding:'9px 12px', borderRadius:'8px', cursor:'pointer', border:'none', textAlign:'left' as const, width:'100%', background: a ? 'linear-gradient(135deg,#1e40af,#1d4ed8)' : 'transparent', color: a ? '#fff' : c.muted, fontSize:'11px', fontWeight:'700', letterSpacing:'0.06em', transition:'all 0.15s' }),
-  logoutBtn: { display:'flex', alignItems:'center', gap:'8px', background:'transparent', border:'none', color:'#ef4444', padding:'9px 12px', borderRadius:'8px', cursor:'pointer', fontSize:'11px', fontWeight:'700', marginTop:'8px', width:'100%' },
-  topTitle: { fontSize:'13px', fontWeight:'700', letterSpacing:'0.12em', color:c.dim },
-  arubaTag: { background:'#1e3a5f', border:'1px solid #3b82f6', color:c.blue, fontSize:'10px', fontWeight:'700', padding:'4px 10px', borderRadius:'20px', letterSpacing:'0.05em', display:'flex', alignItems:'center', gap:'6px' },
-  card: { background:c.card, border:`1px solid ${c.border}`, borderRadius:'12px', padding:'20px' },
-  cardSm: { background:c.card2, border:`1px solid ${c.border}`, borderRadius:'10px', padding:'16px' },
-  sectionTitle: { fontSize:'11px', fontWeight:'700', letterSpacing:'0.12em', color:c.muted, marginBottom:'12px', textTransform:'uppercase' as const },
-  statCard: { background:c.card, border:`1px solid ${c.border}`, borderRadius:'12px', padding:'20px', display:'flex', justifyContent:'space-between', alignItems:'flex-start' },
-  apCard: { background:c.card2, border:`1px solid ${c.border}`, borderRadius:'10px', padding:'14px 18px', marginBottom:'10px', display:'flex', alignItems:'center', gap:'16px' },
-  apSignalBox: { width:'44px', height:'44px', borderRadius:'10px', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'11px', fontWeight:'800', flexShrink:0 },
-  locateBtn: { background:'transparent', border:`1px solid ${c.border}`, color:c.dim, padding:'6px 14px', borderRadius:'8px', cursor:'pointer', fontSize:'11px', fontWeight:'700', display:'flex', alignItems:'center', gap:'6px', marginLeft:'auto' },
-  table: { width:'100%', borderCollapse:'collapse' as const },
-  th: { textAlign:'left' as const, padding:'10px 12px', borderBottom:`1px solid ${c.border}`, color:c.muted, fontSize:'10px', letterSpacing:'0.08em', textTransform:'uppercase' as const },
-  td: { padding:'12px 12px', borderBottom:`1px solid ${c.border}`, fontSize:'13px' },
-  input: { background:c.card2, border:`1px solid ${c.border}`, color:c.text, padding:'10px 14px', borderRadius:'8px', fontSize:'13px', outline:'none', width:'100%', boxSizing:'border-box' as const },
-  btn: (bg?: string) => ({ background:bg||c.blue, color:'#fff', border:'none', padding:'10px 20px', borderRadius:'8px', cursor:'pointer', fontSize:'12px', fontWeight:'700', display:'flex', alignItems:'center', gap:'8px' }),
-  footer: { background:c.sidebar, borderTop:`1px solid ${c.border}`, padding:'8px 24px', display:'flex', justifyContent:'space-between', fontSize:'10px', color:c.border, letterSpacing:'0.08em' },
-  overlay: { position:'fixed' as const, inset:0, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:50 },
-  modal: { background:c.card, border:`1px solid ${c.border}`, borderRadius:'14px', padding:'28px', maxWidth:'420px', width:'90%' },
-};
+import { 
+  Wifi, Radio, Signal, LayoutDashboard, LineChart as LineIcon, 
+  FileUp, Users, Settings, Info, Menu, X, Moon, Sun, 
+  Bell, ShieldCheck, Zap, Activity, AlertTriangle, Layers,
+  Volume2, VolumeX, Crosshair, MapPin, Play, Download, Upload, Trash2, MoreVertical
+} from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
-const INITIAL_APS = [
-  { id: '1', ssid:'CAF-WIFI-5G', signal:-45, ch:36, bw:'850 MHz', freq:'5170 · 5250 80 MHz', mac:'00:0B:86:12:34:56', vendor:'ARUBA NETWORKS', color:c.green },
-  { id: '2', ssid:'CAF-WIFI-2G', signal:-67, ch:6,  bw:'2447 MHz', freq:'2417 · 2447 20 MHz', mac:'00:0B:86:78:90:AB', vendor:'ARUBA NETWORKS', color:c.yellow },
-  { id: '3', ssid:'CAF-GUEST',   signal:-79, ch:52, bw:'5815 MHz', freq:'5735 · 5815 80 MHz', mac:'00:0B:86:CD:EF:01', vendor:'ARUBA NETWORKS', color:c.red },
-  { id: '4', ssid:'VTEL-Fiber',  signal:-85, ch:1,  bw:'2402 MHz', freq:'2402 · 2422 20 MHz', mac:'7c:1c:f1:25:19:2c', vendor:'HUAWEI TECHNOLOGIES', color:c.red },
-  { id: '5', ssid:'Mamon2_5G',   signal:-86, ch:128,bw:'5170 MHz', freq:'5170 · 5250 80 MHz', mac:'98:da:c4:26:21:87', vendor:'TP-LINK TECHNOLOGIES', color:c.red },
-  { id: '6', ssid:'*hidden*',    signal:-87, ch:6,  bw:'5170 MHz', freq:'5170 · 5250 80 MHz', mac:'9e:da:c4:26:21:87', vendor:'GENERIC VENDOR', color:c.red },
+const MOCK_APS = [
+  { id: '1', ssid:'CAF-WIFI-5G', signal:-45, ch:36, freq:'5170-5250 80MHz', mac:'00:0B:86:12:34:56', vendor:'ARUBA NETWORKS', color:'#22c55e', bw: 850 },
+  { id: '2', ssid:'CAF-WIFI-2G', signal:-67, ch:6,  freq:'2417-2447 20MHz', mac:'00:0B:86:78:90:AB', vendor:'ARUBA NETWORKS', color:'#f59e0b', bw: 300 },
+  { id: '3', ssid:'CAF-GUEST',   signal:-79, ch:52, freq:'5735-5815 80MHz', mac:'00:0B:86:CD:EF:01', vendor:'ARUBA NETWORKS', color:'#ef4444', bw: 450 },
+  { id: '4', ssid:'VTEL-Fiber',  signal:-85, ch:1,  freq:'2402-2422 20MHz', mac:'7c:1c:f1:25:19:2c', vendor:'HUAWEI TECHNOLOGIES', color:'#ef4444', bw: 120 },
+  { id: '5', ssid:'Mamon2_5G',   signal:-86, ch:128,freq:'5170-5250 80MHz', mac:'98:da:c4:26:21:87', vendor:'TP-LINK', color:'#ef4444', bw: 680 },
+  { id: '6', ssid:'*hidden*',    signal:-87, ch:6,  freq:'5170-5250 80MHz', mac:'9e:da:c4:26:21:87', vendor:'GENERIC', color:'#ef4444', bw: 200 },
 ];
 
-const speedHistory = [
-  {t:'10:00',dl:420,ul:180},{t:'11:00',dl:395,ul:165},{t:'12:00',dl:460,ul:195},{t:'13:00',dl:510,ul:210},
-  {t:'14:00',dl:480,ul:200},{t:'15:00',dl:445,ul:185},{t:'16:00',dl:470,ul:190},{t:'17:00',dl:490,ul:205},
-  {t:'18:00',dl:500,ul:215},{t:'19:00',dl:475,ul:195},{t:'20:00',dl:455,ul:188},{t:'22:00',dl:450,ul:190},
+const SPEED_HISTORY = [
+  {t:'10:00',dl:420,ul:180},{t:'12:00',dl:460,ul:195},{t:'14:00',dl:480,ul:200},{t:'16:00',dl:470,ul:190},
+  {t:'18:00',dl:500,ul:215},{t:'20:00',dl:455,ul:188},{t:'22:00',dl:450,ul:190},
 ];
 
-const weeklyTrends = [
-  {d:'Mon',v:35,e:12},{d:'Tue',v:42,e:15},{d:'Wed',v:55,e:18},{d:'Thu',v:68,e:25},
-  {d:'Fri',v:45,e:14},{d:'Sat',v:30,e:10},{d:'Sun',v:25,e:8},
+const TEAM = [
+  {id:1,name:'Alex Johnson',role:'Senior Tech',status:'Active',scans:145,perf:58,avatar:'AJ'},
+  {id:2,name:'Maria Garcia',role:'Network Admin',status:'Active',scans:89,perf:38,avatar:'MG'},
+  {id:3,name:'Sam Wilson',role:'Support Specialist',status:'On Leave',scans:212,perf:85,avatar:'SW'},
 ];
 
-const ssidBandwidth = [
-  {name:'CAF-WIFI-5G',v:850},{name:'CAF-WIFI-2G',v:300},{name:'CAF-GUEST',v:450},
-  {name:'VTEL-Fiber',v:120},{name:'Mamon2_5G',v:680},{name:'*hidden*',v:200},
+const REPORTS = [
+  {id:'REP-001',loc:'Main Campus - Wing A',date:'2024-05-15',nets:12,signal:'-52 dBm',color:'text-green-500'},
+  {id:'REP-002',loc:'Basement Storage',date:'2024-05-18',nets:8,signal:'-68 dBm',color:'text-yellow-500'},
+  {id:'REP-003',loc:'Executive Suite',date:'2024-05-20',nets:15,signal:'-45 dBm',color:'text-green-500'},
 ];
 
-const interference = [
-  {name:'CAF-WIFI-5G',v:15},{name:'CAF-WIFI-2G',v:40},{name:'CAF-GUEST',v:25},
-  {name:'VTEL-Fiber',v:80},{name:'Mamon2_5G',v:10},{name:'*hidden*',v:50},
-];
-
-const signalStrengthData = [
-  {name:'CAF-WIFI-5G',v:45},{name:'CAF-WIFI-2G',v:67},{name:'CAF-GUEST',v:79},
-  {name:'VTEL-Fiber',v:85},{name:'Mamon2_5G',v:86},{name:'*hidden*',v:87},
-];
-
-const networkTypes = [
-  {name:'Main',value:40},{name:'Guest',value:25},{name:'IoT',value:20},{name:'Admin',value:15},
-];
-const PIE_COLORS = [c.blue, c.cyan, c.purple, c.yellow];
-
-const channelRatings = [
-  {ch:2,mhz:'20',stars:10,nets:0},{ch:3,mhz:'20',stars:10,nets:0},{ch:4,mhz:'20',stars:10,nets:0},
-  {ch:5,mhz:'20',stars:10,nets:0},{ch:7,mhz:'20',stars:10,nets:0},{ch:8,mhz:'20',stars:10,nets:0},
-  {ch:9,mhz:'20',stars:10,nets:0},{ch:10,mhz:'20',stars:10,nets:0},{ch:11,mhz:'20',stars:10,nets:0},
-  {ch:1,mhz:'20',stars:9,nets:1},{ch:6,mhz:'20',stars:8,nets:1},
-];
-
-const teamMembers = [
-  {id:1,name:'Alex Johnson',role:'Senior Tech',status:'Active',scans:145,perf:58,avatar:'👨‍💻'},
-  {id:2,name:'Maria Garcia',role:'Network Admin',status:'Active',scans:89,perf:38,avatar:'👩‍💻'},
-  {id:3,name:'Sam Wilson',role:'Support Specialist',status:'On Leave',scans:212,perf:85,avatar:'👨‍🔧'},
-  {id:4,name:'Jordan Lee',role:'Junior Tech',status:'Active',scans:56,perf:22,avatar:'👩‍🔧'},
-];
-
-// ── ICONS (SVG inline) ────────────────────────────────────────────────────────
-const Icon = ({ path, size=14, color='currentColor' }: { path: string, size?: number, color?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d={path} />
-  </svg>
-);
-
+// ── MAIN COMPONENT ────────────────────────────────────────────────────────────
 export default function App() {
   const [isMounted, setIsMounted] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(true);
-  const [user, setUser] = useState('admin');
-  const [pass, setPass] = useState('');
   const [tab, setTab] = useState('access-points');
-  const [band, setBand] = useState('2.4');
-  const [speedRunning, setSpeedRunning] = useState(false);
-  const [speedResult, setSpeedResult] = useState<{dl:number, ul:number, ping:number} | null>(null);
-  const [showInvite, setShowInvite] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [members, setMembers] = useState(teamMembers);
-  const [accordion, setAccordion] = useState<Record<number, boolean>>({});
+  const [darkMode, setDark] = useState(true);
   const [auditEnv, setAuditEnv] = useState('');
-  const [bandDropdown, setBandDropdown] = useState(false);
-  const [selectedBandRating, setSelectedBandRating] = useState('2.4 GHz');
+  const [isScanning, setIsScanning] = useState(false);
+  const [members, setMembers] = useState(TEAM);
   
+  // Speed Test State
+  const [speedRunning, setSpeedRunning] = useState(false);
+  const [speedProgress, setSpeedProgress] = useState(0);
+  const [speedResult, setSpeedResult] = useState<any>(null);
+
   // Geiger Tracker State
   const [trackingNetwork, setTrackingNetwork] = useState<any | null>(null);
   const [currentSignal, setCurrentSignal] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const { toast } = useToast();
 
   useEffect(() => {
     setIsMounted(true);
@@ -148,6 +89,7 @@ export default function App() {
         const osc = audioContextRef.current.createOscillator();
         const gain = audioContextRef.current.createGain();
         osc.type = 'sine';
+        // Pitch increases with signal strength
         const freq = 400 + (Math.abs(currentSignal) < 40 ? 400 : 0) + (Math.abs(currentSignal + 90) * 2.5);
         osc.frequency.setValueAtTime(freq, audioContextRef.current.currentTime);
         gain.gain.setValueAtTime(0.1, audioContextRef.current.currentTime);
@@ -160,6 +102,7 @@ export default function App() {
 
       const updateInterval = () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
+        // Delay decreases as signal increases (faster beeps)
         const delay = Math.max(60, (Math.abs(currentSignal) - 30) * 12);
         intervalRef.current = setInterval(() => {
           playBeep();
@@ -174,454 +117,545 @@ export default function App() {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [trackingNetwork, currentSignal, isMuted]);
 
-  const login = (e: React.FormEvent) => { e.preventDefault(); if(user==='admin'&&pass==='admin123') setLoggedIn(true); else alert('Use: admin / admin123'); };
-  
-  const runSpeed = async () => {
-    setSpeedRunning(true); setSpeedResult(null);
-    await new Promise(r=>setTimeout(r,3000));
-    setSpeedResult({dl:Math.round(Math.random()*300+200),ul:Math.round(Math.random()*100+50),ping:Math.round(Math.random()*15+3)});
+  const startScan = () => {
+    if (!auditEnv) {
+      toast({ title: "Error", description: "Enter location name.", variant: "destructive" });
+      return;
+    }
+    setIsScanning(true);
+    setTimeout(() => {
+      setIsScanning(false);
+      toast({ title: "Audit Complete", description: `Found ${MOCK_APS.length} infrastructure nodes.` });
+    }, 2500);
+  };
+
+  const runSpeedTest = async () => {
+    setSpeedRunning(true);
+    setSpeedResult(null);
+    setSpeedProgress(0);
+    const interval = setInterval(() => setSpeedProgress(p => Math.min(95, p + 5)), 200);
+    await new Promise(r => setTimeout(r, 3000));
+    clearInterval(interval);
+    setSpeedProgress(100);
+    setSpeedResult({ dl: 452, ul: 215, ping: 11 });
     setSpeedRunning(false);
   };
 
   const removeMember = (id: number) => {
-    setMembers(members.filter(m => m.id !== id));
+    setMembers(m => m.filter(x => x.id !== id));
+    toast({ title: "Member Removed", description: "Technician credentials revoked." });
   };
 
+  const chartData = useMemo(() => MOCK_APS.map(a => ({
+    name: a.ssid,
+    signal: Math.abs(a.signal),
+    bw: a.bw,
+    interference: Math.floor(Math.random() * 50) + 10
+  })), []);
+
+  const spectrumData = useMemo(() => Array.from({ length: 14 }, (_, i) => ({
+    ch: i + 1,
+    v: i === 0 ? 55 : i === 5 ? 75 : i === 10 ? 45 : Math.random() * 15
+  })), []);
+
   const navItems = [
-    {id:'access-points',label:'ACCESS POINTS',icon:'M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 14 0M2 8.82a15 15 0 0 1 20 0M12 20h.01'},
-    {id:'channel-rating',label:'CHANNEL RATING',icon:'M3 3v18h18M9 9h1v9H9zM13 5h1v13h-1zM17 11h1v7h-1z'},
-    {id:'channel-graph',label:'CHANNEL GRAPH',icon:'M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18'},
-    {id:'time-graph',label:'TIME GRAPH',icon:'M3 3v18h18M7 16l4-4 4 4 4-8'},
-    {id:'export',label:'EXPORT',icon:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8'},
-    {id:'vendors',label:'VENDORS',icon:'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75'},
-    {id:'settings',label:'SETTINGS',icon:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z'},
-    {id:'about',label:'ABOUT',icon:'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 8v4M12 16h.01'},
+    { id: 'access-points', label: 'Access Points', icon: Radio },
+    { id: 'channel-rating', label: 'Channel Rating', icon: Signal },
+    { id: 'channel-graph', label: 'Channel Graph', icon: LayoutDashboard },
+    { id: 'time-graph', label: 'Time Graph', icon: LineIcon },
+    { id: 'export', label: 'Export', icon: FileUp },
+    { id: 'vendors', label: 'Vendors', icon: Users },
+    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'about', label: 'About', icon: Info },
   ];
 
   if (!isMounted) return null;
 
-  if (!loggedIn) return (
-    <div style={S.loginWrap}>
-      <div style={S.loginCard}>
-        <div style={{textAlign:'center',marginBottom:'28px'}}>
-          <div style={{width:'56px',height:'56px',background:'linear-gradient(135deg,#3b82f6,#1d4ed8)',borderRadius:'14px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'24px',margin:'0 auto 16px'}}>📡</div>
-          <h1 style={{fontSize:'22px',fontWeight:'800',marginBottom:'4px'}}>NetPulse CAF</h1>
-          <p style={{fontSize:'13px',color:c.muted}}>Enterprise WiFi Analyzer v3.0.0</p>
-        </div>
-        <form onSubmit={login} style={{display:'flex',flexDirection:'column',gap:'12px'}}>
-          <input style={S.input} type="text" placeholder="Username" value={user} onChange={e=>setUser(e.target.value)} />
-          <input style={S.input} type="password" placeholder="Password" value={pass} onChange={e=>setPass(e.target.value)} />
-          <button style={{...S.btn(),justifyContent:'center',padding:'12px'}} type="submit">Sign In</button>
-        </form>
-        <p style={{fontSize:'12px',textAlign:'center',color:c.muted,marginTop:'16px'}}>Demo: admin / admin123</p>
-      </div>
-    </div>
-  );
-
   return (
-    <div style={S.app}>
+    <div className={`flex min-h-screen ${darkMode ? 'bg-[#0a0f1e] text-[#e2e8f0]' : 'bg-[#f1f5f9] text-[#0f172a]'}`}>
       {/* SIDEBAR */}
-      <aside style={S.sidebar}>
-        <div style={S.logoWrap}>
-          <div style={S.logoIcon}>📡</div>
-          <span style={S.logoText}>NetPulse CAF</span>
+      <aside className={`w-20 lg:w-64 border-r ${darkMode ? 'bg-[#0d1526] border-[#1e2d45]' : 'bg-white border-[#e2e8f0]'} flex flex-col sticky top-0 h-screen`}>
+        <div className="h-16 flex items-center px-6 border-b border-inherit">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <Wifi className="text-white w-6 h-6" />
+          </div>
+          <span className="ml-3 font-bold text-lg hidden lg:block tracking-tight">NetPulse CAF</span>
         </div>
-        <nav style={S.nav}>
-          {navItems.map(n=>(
-            <button key={n.id} style={S.navItem(tab===n.id)} onClick={()=>setTab(n.id)}>
-              <Icon path={n.icon} size={14} color={tab===n.id?'#fff':c.muted} />
-              {n.label}
+        <nav className="flex-1 py-6 px-3 space-y-1">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => { setTab(item.id); setTrackingNetwork(null); }}
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${
+                tab === item.id 
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' 
+                  : 'text-slate-500 hover:bg-slate-500/10'
+              }`}
+            >
+              <item.icon className="w-5 h-5 shrink-0" />
+              <span className="font-bold text-[11px] uppercase tracking-wider hidden lg:block">{item.label}</span>
             </button>
           ))}
         </nav>
-        <button style={S.logoutBtn} onClick={()=>setLoggedIn(false)}>
-          <Icon path="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" size={14} color="#ef4444" />
-          LOGOUT
-        </button>
+        <div className="p-4 mt-auto">
+          <button onClick={() => window.location.reload()} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-500 hover:bg-red-500/10 text-[11px] font-bold uppercase tracking-wider">
+            <X className="w-5 h-5" />
+            <span className="hidden lg:block">Logout</span>
+          </button>
+        </div>
       </aside>
 
       {/* MAIN */}
-      <main style={S.main}>
-        {/* TOPBAR */}
-        <div style={S.topbar}>
-          <span style={S.topTitle}>{navItems.find(n=>n.id===tab)?.label}</span>
-          <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
-            <div style={S.arubaTag}>
-              <div style={{width:'6px',height:'6px',borderRadius:'50%',background:c.blue}} />
-              ARUBA ANALYSIS MODE
+      <main className="flex-1 flex flex-col min-w-0">
+        <header className={`h-16 border-b ${darkMode ? 'bg-[#0d1526] border-[#1e2d45]' : 'bg-white border-[#e2e8f0]'} flex items-center justify-between px-6 sticky top-0 z-30`}>
+          <h1 className="text-sm font-bold uppercase tracking-widest text-slate-500">
+            {navItems.find(n => n.id === tab)?.label}
+          </h1>
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-bold uppercase border border-blue-500/20">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+              Aruba Analysis Mode
             </div>
-            <button style={{background:'transparent',border:'none',cursor:'pointer',fontSize:'18px'}} title="Toggle theme">☀️</button>
+            <button onClick={() => setDark(!darkMode)} className="p-2 rounded-full hover:bg-slate-500/10 transition-colors">
+              {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5" />}
+            </button>
           </div>
-        </div>
+        </header>
 
-        {/* CONTENT */}
-        <div style={S.content}>
-
-          {/* ── ACCESS POINTS ── */}
-          {tab==='access-points' && !trackingNetwork && (
-            <div>
-              {/* Live Connection */}
-              <div style={{...S.card, marginBottom:'16px', borderColor:c.blue+'44'}}>
-                <div style={S.sectionTitle}>LIVE CONNECTION DIAGNOSTICS</div>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:'16px'}}>
+        <div className="p-6 overflow-y-auto">
+          {/* GEIGER TRACKER VIEW */}
+          {trackingNetwork ? (
+            <div className="max-w-4xl mx-auto animate-in zoom-in-95 duration-300">
+              <Card className={`${darkMode ? 'bg-[#111827] border-[#1e2d45]' : 'bg-white border-[#e2e8f0]'} shadow-2xl overflow-hidden`}>
+                <CardHeader className="flex flex-row items-center justify-between pb-8">
                   <div>
-                    <div style={{fontSize:'22px',fontWeight:'800',marginBottom:'4px'}}>CAF-WIFI-5G</div>
-                    <div style={{fontSize:'11px',color:c.muted}}>ARUBA NETWORKS | MAC: 00:0B:86:12:34:56</div>
+                    <CardTitle className="text-2xl font-bold flex items-center gap-3">
+                      <Crosshair className="w-8 h-8 text-blue-500 animate-pulse" />
+                      Locating Hardware: {trackingNetwork.ssid}
+                    </CardTitle>
+                    <CardDescription className="font-mono text-xs mt-1 uppercase">
+                      {trackingNetwork.vendor} | HW: {trackingNetwork.macAddress}
+                    </CardDescription>
                   </div>
-                  <div style={{fontSize:'12px',color:c.muted}}>IP: 192.168.100.15</div>
-                </div>
-                <div style={{display:'flex',gap:'32px',marginTop:'16px',flexWrap:'wrap'}}>
-                  {[{v:'-45 dBm',l:'SIGNAL',c:c.green},{v:'CH 36',l:'5180 MHz',c:c.cyan},{v:'850 Mbps',l:'THROUGHPUT',c:c.blue}].map(x=>(
-                    <div key={x.l}><div style={{fontSize:'18px',fontWeight:'800',color:x.c}}>{x.v}</div><div style={{fontSize:'10px',color:c.muted,marginTop:'2px'}}>{x.l}</div></div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Throttle Warning */}
-              <div style={{background:'#2d1515',border:`1px solid ${c.red}55`,borderRadius:'8px',padding:'10px 16px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'8px',color:c.yellow,fontSize:'12px'}}>
-                ⚠️ WI-FI SCAN THROTTLING IS ACTIVE. ACCURACY MAY VARY.
-              </div>
-
-              {/* Audit */}
-              <div style={{...S.card, marginBottom:'16px'}}>
-                <div style={S.sectionTitle}>⊙ AUDIT ENVIRONMENT</div>
-                <div style={{display:'flex',gap:'12px',flexWrap:'wrap'}}>
-                  <input style={{...S.input,flex:1,minWidth:'200px'}} placeholder="e.g., Data Center Rack B-12" value={auditEnv} onChange={e=>setAuditEnv(e.target.value)} />
-                  <button style={{...S.btn(),padding:'10px 24px'}}>▶ START SITE AUDIT</button>
-                </div>
-              </div>
-
-              {/* Discovery Registry */}
-              <div style={S.card}>
-                <div style={S.sectionTitle}>⊙ DISCOVERY REGISTRY</div>
-                {INITIAL_APS.map((ap,i)=>(
-                  <div key={i} style={S.apCard}>
-                    <div style={{...S.apSignalBox,background:ap.color+'22',color:ap.color}}>
-                      {ap.ch}
+                  <Button variant="ghost" size="icon" onClick={() => setTrackingNetwork(null)} className="hover:text-red-500">
+                    <X className="w-6 h-6" />
+                  </Button>
+                </CardHeader>
+                <CardContent className="py-20 text-center space-y-12">
+                  <div className="relative inline-block">
+                    <div className="text-[120px] font-black tracking-tighter text-blue-500 drop-shadow-[0_0_30px_rgba(59,130,246,0.5)]">
+                      {Math.round(currentSignal)}
+                      <span className="text-3xl ml-3 text-slate-500 font-bold">dBm</span>
                     </div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontWeight:'700',fontSize:'14px',display:'flex',alignItems:'center',gap:'8px'}}>
-                        {ap.ssid}
-                        {ap.vendor==='ARUBA NETWORKS'&&<span style={{fontSize:'9px',background:c.blue+'22',color:c.blue,padding:'1px 6px',borderRadius:'4px'}}>ARUBA</span>}
-                      </div>
-                      <div style={{fontSize:'11px',color:c.muted,marginTop:'2px'}}>{ap.vendor} · {ap.mac}</div>
-                      <div style={{fontSize:'11px',color:c.muted,marginTop:'2px'}}>
-                        <span style={{color:ap.color,fontWeight:'700'}}>{ap.signal} dBm</span>
-                        {' · '}{ap.freq}
-                      </div>
+                  </div>
+                  <div className="max-w-2xl mx-auto space-y-4">
+                    <div className="h-6 w-full bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                      <div 
+                        className="h-full bg-blue-500 transition-all duration-100 shadow-[0_0_20px_rgba(59,130,246,0.5)]"
+                        style={{ width: `${Math.min(100, Math.max(0, (currentSignal + 100) * 1.5))}%` }}
+                      />
                     </div>
-                    <button style={S.locateBtn} onClick={() => setTrackingNetwork(ap)}>📍 LOCATE AP</button>
+                    <div className="flex justify-between items-center px-2">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                        Geiger feedback rate increases near Aruba Radio
+                      </p>
+                      <button onClick={() => setIsMuted(!isMuted)} className="flex items-center gap-2 text-xs font-bold text-blue-500">
+                        {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                        {isMuted ? 'UNMUTE AUDIO' : 'AUDIO ACTIVE'}
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
+                </CardContent>
+              </Card>
             </div>
-          )}
+          ) : (
+            <>
+              {/* ACCESS POINTS TAB */}
+              {tab === 'access-points' && (
+                <div className="space-y-6">
+                  <Card className={`${darkMode ? 'bg-[#111827] border-[#1e2d45]' : 'bg-white border-[#e2e8f0]'} border-l-4 border-l-blue-600`}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Live Connection Diagnostics</span>
+                        <Badge variant="outline" className="font-mono text-[10px]">IP: 192.168.100.15</Badge>
+                      </div>
+                      <div className="flex flex-wrap justify-between items-end gap-6">
+                        <div>
+                          <h3 className="text-2xl font-bold">CAF-WIFI-5G</h3>
+                          <p className="text-[11px] font-mono text-slate-500 mt-1">ARUBA NETWORKS | 00:0B:86:12:34:56</p>
+                        </div>
+                        <div className="flex gap-12 text-center">
+                          <div>
+                            <div className="text-lg font-bold text-green-500">-45 dBm</div>
+                            <div className="text-[9px] text-slate-500 uppercase mt-1">Signal</div>
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold text-blue-500">CH 36</div>
+                            <div className="text-[9px] text-slate-500 uppercase mt-1">5180 MHz</div>
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold text-cyan-400">850 Mbps</div>
+                            <div className="text-[9px] text-slate-500 uppercase mt-1">Throughput</div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-          {/* Geiger Tracker View */}
-          {trackingNetwork && (
-            <div style={{...S.card, textAlign:'center', py:'60px', background:c.card2, position:'relative'}}>
-               <button 
-                style={{position:'absolute', top:'20px', right:'20px', background:c.card, border:'none', color:c.dim, cursor:'pointer'}}
-                onClick={() => setTrackingNetwork(null)}
-               >✕ Close Tracker</button>
-               
-               <div style={{fontSize:'14px', color:c.blue, fontWeight:'700', marginBottom:'10px'}}>LOCATING HARDWARE: {trackingNetwork.ssid}</div>
-               <div style={{fontSize:'80px', fontWeight:'800', color: trackingNetwork.color, marginBottom:'20px'}}>
-                  {Math.round(currentSignal)} <span style={{fontSize:'20px', color:c.muted}}>dBm</span>
-               </div>
-               <div style={{width:'100%', height:'20px', background:c.sidebar, borderRadius:'10px', overflow:'hidden', marginBottom:'20px'}}>
-                  <div style={{width:`${Math.min(100, Math.max(0, (currentSignal + 100) * 1.5))}%`, height:'100%', background:trackingNetwork.color, transition:'width 0.1s'}} />
-               </div>
-               <div style={{fontSize:'12px', color:c.muted}}>
-                  Geiger feedback rate increases as proximity to <span style={{color:c.blue}}>Aruba Radio</span> improves.
-               </div>
-               <button 
-                  style={{marginTop:'30px', ...S.btn(c.card), color:c.dim, border:`1px solid ${c.border}`}} 
-                  onClick={() => setIsMuted(!isMuted)}
-               >
-                 {isMuted ? '🔇 Audio Muted' : '🔊 Audio Active'}
-               </button>
-            </div>
-          )}
-
-          {/* ── CHANNEL RATING ── */}
-          {tab==='channel-rating' && (
-            <div>
-              <div style={{display:'flex',gap:'16px',alignItems:'flex-start',flexWrap:'wrap',marginBottom:'16px'}}>
-                <div style={{...S.card,flex:1,minWidth:'240px',borderColor:c.blue+'44'}}>
-                  <div style={{fontSize:'11px',color:c.blue,fontWeight:'700',marginBottom:'8px'}}>Current connection</div>
-                  <div style={{fontWeight:'700',marginBottom:'4px'}}>CAF-WIFI-5G – 5G (00:0B:86:12:34:56)</div>
-                  <div style={{color:c.green,fontWeight:'700',fontSize:'13px'}}>-45dBm · CH 36 · S180</div>
-                  <div style={{color:c.cyan,fontSize:'12px',marginTop:'2px'}}>850Mbps · 192.168.100.15</div>
-                  <div style={{background:'#2d1a1a',border:`1px solid ${c.red}44`,borderRadius:'6px',padding:'6px 10px',marginTop:'10px',color:c.red,fontSize:'11px',display:'flex',alignItems:'center',gap:'6px'}}>
-                    ⊘ Wi-Fi scan throttling is enabled
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-center justify-center gap-3 text-[10px] font-bold text-red-500 uppercase tracking-widest">
+                    <AlertTriangle className="w-4 h-4" /> Wi-Fi scan throttling is active. Accuracy may vary.
                   </div>
-                </div>
-                {/* Band selector */}
-                <div style={{position:'relative'}}>
-                  <button onClick={()=>setBandDropdown(!bandDropdown)} style={{...S.btn(c.card2),border:`1px solid ${c.border}`,color:c.text,padding:'10px 16px',display:'flex',alignItems:'center',gap:'8px',minWidth:'120px',justifyContent:'space-between'}}>
-                    {selectedBandRating} <span>▾</span>
-                  </button>
-                  {bandDropdown&&(
-                    <div style={{position:'absolute',top:'44px',left:0,background:c.card,border:`1px solid ${c.border}`,borderRadius:'8px',overflow:'hidden',zIndex:20,minWidth:'120px'}}>
-                      {['2.4 GHz','5 GHz','6 GHz'].map(b=>(
-                        <div key={b} onClick={()=>{setSelectedBandRating(b);setBandDropdown(false);}} style={{padding:'10px 16px',cursor:'pointer',fontSize:'13px',background:selectedBandRating===b?c.card2:'transparent'}}>
-                          {b}
+
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <Input 
+                      placeholder="Audit Environment (e.g., Data Center Rack B-12)" 
+                      value={auditEnv}
+                      onChange={(e) => setAuditEnv(e.target.value)}
+                      className={`${darkMode ? 'bg-[#0d1526] border-[#1e2d45]' : 'bg-white border-[#e2e8f0]'} h-11`}
+                    />
+                    <Button onClick={startScan} disabled={isScanning} className="h-11 px-8 bg-blue-600 hover:bg-blue-700 font-bold uppercase text-xs tracking-widest">
+                      {isScanning ? 'Scanning...' : 'Start Site Audit'}
+                    </Button>
+                  </div>
+
+                  <Card className={`${darkMode ? 'bg-[#111827] border-[#1e2d45]' : 'bg-white border-[#e2e8f0]'} overflow-hidden`}>
+                    <CardHeader className="bg-slate-500/5 py-4 border-b border-inherit">
+                      <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Infrastructure Discovery Registry</CardTitle>
+                    </CardHeader>
+                    <div className="divide-y border-inherit">
+                      {MOCK_APS.map((ap) => (
+                        <div key={ap.id} className="p-4 flex items-center justify-between hover:bg-blue-600/5 transition-colors group">
+                          <div className="flex items-center gap-5">
+                            <div className="w-12 h-12 rounded-xl bg-slate-500/10 flex items-center justify-center relative">
+                              <Wifi className={`w-6 h-6 ${Math.abs(ap.signal) < 60 ? 'text-green-500' : 'text-yellow-500'}`} />
+                              <div className="absolute -top-1 -right-1 text-[8px] font-bold bg-slate-800 text-white px-1.5 py-0.5 rounded-md border border-slate-700">{ap.ch}</div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-sm">{ap.ssid}</span>
+                                {ap.vendor === 'ARUBA NETWORKS' && <Badge className="bg-blue-600/10 text-blue-500 hover:bg-blue-600/10 text-[8px] h-4">ARUBA</Badge>}
+                              </div>
+                              <div className="flex gap-4 text-[10px] font-mono text-slate-500">
+                                <span className={Math.abs(ap.signal) < 60 ? 'text-green-500' : 'text-yellow-500'}>{ap.signal} dBm</span>
+                                <span className="uppercase">{ap.vendor}</span>
+                                <span className="text-blue-600/60">{ap.freq}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setTrackingNetwork(ap)}
+                            className="text-[9px] font-bold uppercase tracking-widest border-blue-600/30 text-blue-500 hover:bg-blue-600 hover:text-white transition-all"
+                          >
+                            <Crosshair className="w-3 h-3 mr-2" /> Locate AP
+                          </Button>
                         </div>
                       ))}
                     </div>
-                  )}
+                  </Card>
                 </div>
-              </div>
+              )}
 
-              <div style={S.card}>
-                <div style={{display:'flex',gap:'8px',marginBottom:'12px',flexWrap:'wrap'}}>
-                  <span style={{fontSize:'13px',fontWeight:'700',color:c.cyan}}>BEST CHANNELS:</span>
-                  <span style={{fontSize:'13px',color:c.blue}}>20 MHz 2, 3, 4, 5, 7, 8, 9, 10, 11, 1</span>
-                </div>
-                <table style={S.table}>
-                  <thead>
-                    <tr>
-                      <th style={S.th}>CHANNEL RATING</th>
-                      <th style={S.th}>CHANNEL NUMBER</th>
-                      <th style={S.th}>ACCESS POINT COUNT</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {channelRatings.map((r,i)=>(
-                      <tr key={i}>
-                        <td style={S.td}><span style={{color:c.yellow,letterSpacing:'2px'}}>{'★'.repeat(r.stars)}{'☆'.repeat(10-r.stars)}</span></td>
-                        <td style={{...S.td,color:c.cyan,fontWeight:'700'}}>{r.ch} <span style={{color:c.muted,fontSize:'11px'}}>{r.mhz} MHz</span></td>
-                        <td style={{...S.td,color:r.nets>0?c.yellow:c.muted}}>{r.nets}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* ── CHANNEL GRAPH ── */}
-          {tab==='channel-graph' && (
-            <div>
-              <div style={S.statGrid4}>
-                {[
-                  {l:'CAF NETWORKS',v:'6',icon:'📡',trend:'+2.5% from last scan'},
-                  {l:'ACTIVE APS',v:'18',icon:'🔗',trend:'+2.6% from last scan'},
-                  {l:'AVG SIGNAL',v:'-52 dBm',icon:'📶',trend:'+2.5% from last scan'},
-                  {l:'NETWORK HEALTH',v:'98%',icon:'🛡️',trend:'+2.5% from last scan'},
-                ].map((s,i)=>(
-                  <div key={i} style={S.statCard}>
-                    <div>
-                      <div style={S.statLabel}>{s.l}</div>
-                      <div style={{...S.statVal,color:c.blue}}>{s.v}</div>
-                      <div style={{fontSize:'11px', color:c.green}}>↑ {s.trend}</div>
+              {/* CHANNEL RATING TAB */}
+              {tab === 'channel-rating' && (
+                <div className="space-y-6 max-w-4xl mx-auto">
+                   <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-xs uppercase tracking-widest text-slate-500">Spectral Quality Index</h3>
+                    <div className="flex gap-2">
+                      {['2.4 GHz', '5 GHz', '6 GHz'].map(b => (
+                        <Button key={b} variant="outline" size="sm" className="text-[10px] h-8 border-[#1e2d45]">{b}</Button>
+                      ))}
                     </div>
-                    <div style={{fontSize:'24px',opacity:0.5}}>{s.icon}</div>
                   </div>
-                ))}
-              </div>
-
-              <div style={{...S.card,marginBottom:'16px'}}>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'16px'}}>
-                  <div>
-                    <div style={{fontWeight:'700',fontSize:'15px',marginBottom:'4px'}}>≈ Channel Spectrum Graph</div>
-                    <div style={{fontSize:'12px',color:c.muted}}>Visualizing signal overlap and channel congestion</div>
-                  </div>
+                  <Card className={`${darkMode ? 'bg-[#111827] border-[#1e2d45]' : 'bg-white border-[#e2e8f0]'}`}>
+                    <Table>
+                      <TableHeader className="bg-slate-500/5">
+                        <TableRow className="border-inherit">
+                          <TableHead className="text-[10px] font-bold uppercase tracking-widest">Channel Rating</TableHead>
+                          <TableHead className="text-center text-[10px] font-bold uppercase tracking-widest">Channel</TableHead>
+                          <TableHead className="text-right text-[10px] font-bold uppercase tracking-widest">AP Count</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {[
+                          { ch: 2, stars: 10, count: 0 },
+                          { ch: 6, stars: 8, count: 4 },
+                          { ch: 11, stars: 9, count: 1 },
+                          { ch: 1, stars: 7, count: 6 },
+                        ].map((c) => (
+                          <TableRow key={c.ch} className="border-inherit">
+                            <TableCell>
+                              <div className="flex gap-0.5 text-green-500">
+                                {Array.from({ length: 10 }).map((_, i) => (
+                                  <span key={i} className={i < c.stars ? "text-green-500" : "text-slate-800"}>★</span>
+                                ))}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center font-bold text-cyan-400">{c.ch} <span className="text-[10px] font-normal text-slate-500 ml-1">20 MHz</span></TableCell>
+                            <TableCell className="text-right font-bold text-blue-500">{c.count}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Card>
                 </div>
-                <ResponsiveContainer width="100%" height={240}>
-                  <AreaChart data={band==='2.4'?spectrumData24:spectrumData5}>
-                    <CartesianGrid stroke={c.border} strokeDasharray="3 3" />
-                    <XAxis dataKey="ch" tick={{fill:c.muted,fontSize:11}} />
-                    <YAxis tick={{fill:c.muted,fontSize:11}} />
-                    <Tooltip contentStyle={{background:c.card,border:`1px solid ${c.border}`,borderRadius:'8px',color:c.text}} />
-                    <Area type="monotone" dataKey="v" stroke={c.cyan} fill={c.cyan} fillOpacity={0.2} strokeWidth={2} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
+              )}
 
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'16px'}}>
-                <div style={S.card}>
-                  <div style={{fontWeight:'700',fontSize:'14px',marginBottom:'4px'}}>≋ SSID Bandwidth Distribution</div>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={ssidBandwidth} layout="vertical" margin={{left:20}}>
-                      <XAxis type="number" tick={{fill:c.muted,fontSize:10}} />
-                      <YAxis dataKey="name" type="category" width={80} tick={{fill:c.muted,fontSize:10}} />
-                      <Bar dataKey="v" fill={c.blue} radius={[0,4,4,0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div style={S.card}>
-                  <div style={{fontWeight:'700',fontSize:'14px',marginBottom:'4px'}}>⚠ Interference Analysis</div>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={interference}>
-                      <XAxis dataKey="name" tick={{fill:c.muted,fontSize:9}} />
-                      <YAxis tick={{fill:c.muted,fontSize:10}} domain={[0,100]} />
-                      <Bar dataKey="v" fill={c.yellow} radius={[4,4,0,0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── TIME GRAPH ── */}
-          {tab==='time-graph' && (
-            <div style={{display:'grid',gridTemplateColumns:'1fr 340px',gap:'20px',alignItems:'start'}}>
-              <div>
-                <div style={{...S.card,marginBottom:'20px'}}>
-                  <div style={{fontWeight:'700',fontSize:'15px',marginBottom:'16px'}}>Speed Test History</div>
-                  <ResponsiveContainer width="100%" height={260}>
-                    <LineChart data={speedHistory}>
-                      <CartesianGrid stroke={c.border} strokeDasharray="3 3" />
-                      <XAxis dataKey="t" tick={{fill:c.muted,fontSize:11}} />
-                      <YAxis tick={{fill:c.muted,fontSize:11}} unit=" Mbps" />
-                      <Tooltip contentStyle={{background:c.card,border:`1px solid ${c.border}`,borderRadius:'8px',color:c.text}} />
-                      <Line type="monotone" dataKey="dl" stroke={c.blue} strokeWidth={2} name="Download" />
-                      <Line type="monotone" dataKey="ul" stroke={c.cyan} strokeWidth={2} name="Upload" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-
-                <div style={S.card}>
-                  <div style={{fontWeight:'700',fontSize:'15px',marginBottom:'16px'}}>Weekly Activity Trends</div>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <AreaChart data={weeklyTrends}>
-                      <XAxis dataKey="d" tick={{fill:c.muted,fontSize:11}} />
-                      <YAxis tick={{fill:c.muted,fontSize:11}} />
-                      <Area type="monotone" dataKey="v" stroke={c.blue} fill={c.blue} fillOpacity={0.2} strokeWidth={2} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Speed Test Panel */}
-              <div style={{...S.card,position:'sticky',top:'72px'}}>
-                <div style={{fontWeight:'700',fontSize:'15px',marginBottom:'20px'}}>⚡ Active Speed Test</div>
-                {!speedResult ? (
-                  <div style={{textAlign:'center',padding:'20px 0'}}>
-                    <div style={{fontSize:'32px',marginBottom:'16px',opacity:speedRunning?1:0.4}}>
-                      {speedRunning ? '⏳' : '〜'}
-                    </div>
-                    <button style={{...S.btn(c.card2), border:`1px solid ${c.border}`, color:c.text, width:'100%', justifyContent:'center'}} onClick={runSpeed} disabled={speedRunning}>
-                      {speedRunning ? '⏳ Running...' : '▶ Start Speed Test'}
-                    </button>
-                  </div>
-                ) : (
-                  <div>
-                    <div style={{background:'#0d2040',borderRadius:'10px',padding:'16px',textAlign:'center',marginBottom:'12px',border:`1px solid ${c.blue}44`}}>
-                      <div style={{fontSize:'32px',fontWeight:'800',color:c.blue}}>{speedResult.dl}</div>
-                      <div style={{fontSize:'14px',color:c.blue}}>Mbps DOWNLOAD</div>
-                    </div>
-                    <button style={{...S.btn(c.card2),border:`1px solid ${c.border}`,color:c.text,width:'100%',justifyContent:'center'}} onClick={()=>setSpeedResult(null)}>Run Again</button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* ── EXPORT ── */}
-          {tab==='export' && (
-            <div style={S.card}>
-              <div style={{fontWeight:'700',fontSize:'18px',marginBottom:'24px'}}>Audit Reports Registry</div>
-              <table style={S.table}>
-                <thead>
-                  <tr>
-                    {['Report ID','Location','Date','Networks','Action'].map(h=>(
-                      <th key={h} style={S.th}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {reports.map((r,i)=>(
-                    <tr key={i}>
-                      <td style={{...S.td,color:c.blue,fontWeight:'700'}}>{r.id}</td>
-                      <td style={S.td}>{r.loc}</td>
-                      <td style={{...S.td,color:c.muted}}>{r.date}</td>
-                      <td style={S.td}>{r.nets} detected</td>
-                      <td style={S.td}><button style={{background:'transparent',border:'none',color:c.blue,cursor:'pointer'}}>👁 View</button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* ── VENDORS (Team Management) ── */}
-          {tab==='vendors' && (
-            <div>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'24px'}}>
-                <div style={{fontWeight:'700',fontSize:'18px'}}>Organization Management</div>
-                <button style={{...S.btn(c.card2),border:`1px solid ${c.border}`,color:c.text}} onClick={()=>setShowInvite(true)}>
-                   Invite Member
-                </button>
-              </div>
-
-              <div style={S.card}>
-                <div style={{fontWeight:'700',fontSize:'15px',marginBottom:'16px'}}>Team Members</div>
-                <table style={S.table}>
-                  <thead>
-                    <tr>{['Member','Role','Status','Lifetime Scans',''].map(h=><th key={h} style={S.th}>{h}</th>)}</tr>
-                  </thead>
-                  <tbody>
-                    {members.map((m,i)=>(
-                      <tr key={i}>
-                        <td style={S.td}>
-                          <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
-                            <span style={{fontSize:'18px'}}>{m.avatar}</span>
-                            <span style={{fontWeight:'600'}}>{m.name}</span>
+              {/* CHANNEL GRAPH TAB */}
+              {tab === 'channel-graph' && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[
+                      { l: 'Infrastructure', v: '6', i: Wifi },
+                      { l: 'Radios Active', v: '18', i: Radio },
+                      { l: 'Avg Signal', v: '-52 dBm', i: Signal },
+                      { l: 'Health Score', v: '98%', i: ShieldCheck },
+                    ].map((s, i) => (
+                      <Card key={i} className={`${darkMode ? 'bg-[#111827] border-[#1e2d45]' : 'bg-white border-[#e2e8f0]'}`}>
+                        <CardContent className="p-4 flex justify-between">
+                          <div>
+                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">{s.l}</p>
+                            <p className="text-2xl font-bold">{s.v}</p>
                           </div>
-                        </td>
-                        <td style={{...S.td,color:c.muted}}>{m.role}</td>
-                        <td style={S.td}>{m.status}</td>
-                        <td style={S.td}>{m.scans}</td>
-                        <td style={S.td}>
-                          <button 
-                            style={{background:'transparent',border:'none',color:c.red,cursor:'pointer', fontSize:'11px', fontWeight:'700'}}
-                            onClick={() => removeMember(m.id)}
-                          >REMOVE</button>
-                        </td>
-                      </tr>
+                          <s.i className="w-8 h-8 text-blue-500 opacity-20" />
+                        </CardContent>
+                      </Card>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+                  </div>
 
-          {/* ── ABOUT ── */}
-          {tab==='about' && (
-            <div style={{maxWidth:'760px',margin:'0 auto',textAlign:'center'}}>
-              <div style={{width:'72px',height:'72px',background:'linear-gradient(135deg,#1e3a5f,#1e40af)',border:`2px solid ${c.blue}`,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'28px',margin:'0 auto 20px'}}>📡</div>
-              <div style={{fontSize:'32px',fontWeight:'800',marginBottom:'8px'}}>NetPulse CAF Analyzer</div>
-              <div style={{fontSize:'14px',color:c.muted,marginBottom:'40px'}}>v3.0.0 Enterprise Infrastructure Monitoring</div>
-              <div style={{...S.card,textAlign:'center'}}>
-                <div style={{fontSize:'24px',marginBottom:'10px'}}>🌐</div>
-                <div style={{fontWeight:'700',fontSize:'16px',marginBottom:'8px'}}>Global Deployment</div>
-                <div style={{fontSize:'13px',color:c.muted,lineHeight:'1.7',maxWidth:'480px',margin:'0 auto'}}>
-                  Used by field technicians across multiple continents to ensure reliable connectivity for the modern mobile workforce. Developed and maintained by the GDIT Engineering Team.
+                  <Card className={`${darkMode ? 'bg-[#111827] border-[#1e2d45]' : 'bg-white border-[#e2e8f0]'}`}>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2"><Layers className="w-5 h-5 text-blue-500" /> Spectral Channel Analysis</CardTitle>
+                      <CardDescription>Visualizing signal overlap and "hump" distributions</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[400px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={spectrumData}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={false} stroke={darkMode ? "#1e2d45" : "#e2e8f0"} />
+                          <XAxis dataKey="ch" stroke="#555" fontSize={12} label={{ value: 'WiFi Channels', position: 'insideBottom', offset: -5, fill: '#555' }} />
+                          <YAxis stroke="#555" fontSize={12} domain={[0, 100]} />
+                          <Tooltip contentStyle={{ backgroundColor: '#111827', border: 'none', borderRadius: '8px' }} />
+                          <Area type="monotone" dataKey="v" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.2} strokeWidth={3} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
                 </div>
-              </div>
-            </div>
-          )}
+              )}
 
+              {/* TIME GRAPH / SPEED TAB */}
+              {tab === 'time-graph' && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2 space-y-6">
+                    <Card className={`${darkMode ? 'bg-[#111827] border-[#1e2d45]' : 'bg-white border-[#e2e8f0]'}`}>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Throughput History</CardTitle>
+                        <CardDescription>Historical speed test performance (24h)</CardDescription>
+                      </CardHeader>
+                      <CardContent className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={SPEED_HISTORY}>
+                            <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "#1e2d45" : "#e2e8f0"} vertical={false} />
+                            <XAxis dataKey="t" stroke="#555" fontSize={11} />
+                            <YAxis stroke="#555" fontSize={11} unit="M" />
+                            <Tooltip contentStyle={{ backgroundColor: '#111827', border: 'none' }} />
+                            <Line type="monotone" dataKey="dl" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#3b82f6' }} />
+                            <Line type="monotone" dataKey="ul" stroke="#06b6d4" strokeWidth={3} dot={{ fill: '#06b6d4' }} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <Card className={`${darkMode ? 'bg-[#111827] border-[#1e2d45]' : 'bg-white border-[#e2e8f0]'}`}>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2"><Zap className="w-5 h-5 text-yellow-500" /> Active Speed Test</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-8 py-10">
+                      {speedResult ? (
+                        <div className="text-center space-y-8 animate-in fade-in zoom-in duration-500">
+                          <div className="p-8 rounded-3xl bg-blue-600/10 border border-blue-600/20">
+                            <p className="text-6xl font-black text-blue-500">{speedResult.dl}</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-2">Mbps Download</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="p-4 rounded-2xl bg-slate-500/5 border border-inherit text-center">
+                              <p className="text-xl font-bold text-cyan-400">{speedResult.ul}</p>
+                              <p className="text-[8px] text-slate-500 uppercase mt-1">Upload</p>
+                            </div>
+                            <div className="p-4 rounded-2xl bg-slate-500/5 border border-inherit text-center">
+                              <p className="text-xl font-bold text-purple-400">{speedResult.ping}</p>
+                              <p className="text-[8px] text-slate-500 uppercase mt-1">Ping ms</p>
+                            </div>
+                          </div>
+                          <Button onClick={runSpeedTest} variant="outline" className="w-full">Retest Node</Button>
+                        </div>
+                      ) : (
+                        <div className="text-center space-y-6">
+                          <div className="w-24 h-24 rounded-full bg-blue-600/5 flex items-center justify-center mx-auto border-2 border-blue-600/20">
+                            <Activity className={`w-10 h-10 text-blue-500 ${speedRunning ? 'animate-pulse' : ''}`} />
+                          </div>
+                          {speedRunning ? (
+                            <div className="space-y-4">
+                              <Progress value={speedProgress} className="h-2" />
+                              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Benchmarking throughput...</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              <p className="text-xs text-slate-500 leading-relaxed px-6">Measure point-to-point bandwidth capacity from this analyzer to the headend.</p>
+                              <Button onClick={runSpeedTest} className="w-full bg-blue-600 hover:bg-blue-700 font-bold uppercase tracking-widest text-xs">Run Diagnostic</Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* EXPORT TAB */}
+              {tab === 'export' && (
+                <div className="space-y-6">
+                  <Card className={`${darkMode ? 'bg-[#111827] border-[#1e2d45]' : 'bg-white border-[#e2e8f0]'}`}>
+                    <Table>
+                      <TableHeader className="bg-slate-500/5">
+                        <TableRow className="border-inherit">
+                          <TableHead className="text-[10px] font-bold uppercase tracking-widest">Report ID</TableHead>
+                          <TableHead className="text-[10px] font-bold uppercase tracking-widest">Location</TableHead>
+                          <TableHead className="text-[10px] font-bold uppercase tracking-widest">Date</TableHead>
+                          <TableHead className="text-center text-[10px] font-bold uppercase tracking-widest">Nodes</TableHead>
+                          <TableHead className="text-right text-[10px] font-bold uppercase tracking-widest">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {REPORTS.map((r) => (
+                          <TableRow key={r.id} className="border-inherit group hover:bg-slate-500/5">
+                            <TableCell className="font-mono text-blue-500 font-bold">{r.id}</TableCell>
+                            <TableCell className="font-bold">{r.loc}</TableCell>
+                            <TableCell className="text-slate-500">{r.date}</TableCell>
+                            <TableCell className="text-center">{r.nets}</TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="ghost" size="sm" className="font-bold text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all text-blue-500">
+                                Download PDF
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Card>
+                </div>
+              )}
+
+              {/* VENDORS / ADMIN TAB */}
+              {tab === 'vendors' && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h2 className="text-2xl font-bold tracking-tight">Team Operations</h2>
+                      <p className="text-xs text-slate-500 mt-1">Manage field technician credentials and performance.</p>
+                    </div>
+                    <Button className="bg-blue-600 hover:bg-blue-700 font-bold uppercase text-[10px] tracking-widest">
+                      Invite Member
+                    </Button>
+                  </div>
+                  <Card className={`${darkMode ? 'bg-[#111827] border-[#1e2d45]' : 'bg-white border-[#e2e8f0]'}`}>
+                    <Table>
+                      <TableHeader className="bg-slate-500/5">
+                        <TableRow className="border-inherit">
+                          <TableHead>Technician</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {members.map((m) => (
+                          <TableRow key={m.id} className="border-inherit">
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold border border-slate-700">
+                                  {m.avatar}
+                                </div>
+                                <span className="font-bold text-sm">{m.name}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell><Badge variant="secondary" className="text-[10px]">{m.role}</Badge></TableCell>
+                            <TableCell>
+                              <span className={`text-[10px] font-bold uppercase tracking-widest ${m.status === 'Active' ? 'text-green-500' : 'text-slate-500'}`}>
+                                {m.status}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="bg-[#111827] border-[#1e2d45] text-white">
+                                  <DropdownMenuItem onClick={() => removeMember(m.id)} className="text-red-500 focus:text-red-500 cursor-pointer font-bold text-xs">
+                                    <Trash2 className="w-4 h-4 mr-2" /> Revoke Access
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Card>
+                </div>
+              )}
+
+              {/* ABOUT TAB */}
+              {tab === 'about' && (
+                <div className="max-w-3xl mx-auto space-y-12 py-10 text-center">
+                  <div className="space-y-4">
+                    <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center mx-auto shadow-2xl shadow-blue-500/40 animate-bounce">
+                      <Wifi className="text-white w-10 h-10" />
+                    </div>
+                    <h2 className="text-4xl font-bold tracking-tighter">NetPulse CAF Analyzer</h2>
+                    <p className="text-slate-500 text-lg">v3.6.0 Enterprise Infrastructure Monitoring</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                    <Card className={`${darkMode ? 'bg-[#111827] border-[#1e2d45]' : 'bg-white border-[#e2e8f0]'}`}>
+                      <CardHeader>
+                        <CardTitle className="text-sm flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-green-500" /> FIPS-140-2 Compliant</CardTitle>
+                      </CardHeader>
+                      <CardContent className="text-xs text-slate-500 leading-relaxed">
+                        Secure spectral analysis for high-clearance environments. NetPulse provides full visibility into CAF infrastructure without exposing endpoint metadata.
+                      </CardContent>
+                    </Card>
+                    <Card className={`${darkMode ? 'bg-[#111827] border-[#1e2d45]' : 'bg-white border-[#e2e8f0]'}`}>
+                      <CardHeader>
+                        <CardTitle className="text-sm flex items-center gap-2"><Zap className="w-5 h-5 text-blue-500" /> Aruba Core Integration</CardTitle>
+                      </CardHeader>
+                      <CardContent className="text-xs text-slate-500 leading-relaxed">
+                        Deep hooks into Aruba AirWave and Central APIs allow for real-time radio management and automated spectral optimization directly from the mobile edge.
+                      </CardContent>
+                    </Card>
+                  </div>
+                  <div className="pt-10 border-t border-inherit">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em]">Developed by GDIT Engineering for the Mobile Workforce</p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* FOOTER */}
-        <div style={S.footer}>
-          <span>SYSTEM: v3.0.0-ENTERPRISE-PROD &nbsp;|&nbsp; STATE: <span style={{color:c.green}}>SECUREOPS</span></span>
-          <span>ENCRYPTION: AES-256-FIPS &nbsp;|&nbsp; ENGINE: NETPULSE-X-ARUBA</span>
-        </div>
+        <footer className={`h-10 border-t ${darkMode ? 'bg-[#0d1526] border-[#1e2d45]' : 'bg-white border-[#e2e8f0]'} flex items-center justify-between px-6 text-[9px] font-bold text-slate-600 uppercase tracking-widest`}>
+          <div className="flex gap-6">
+            <span>System: v3.6.0-PROD</span>
+            <span className="text-green-600">State: SecureOps</span>
+          </div>
+          <div className="flex gap-6">
+            <span>Encryption: AES-256-FIPS</span>
+            <span>Engine: NetPulse-X-Aruba</span>
+          </div>
+        </footer>
       </main>
     </div>
   );
 }
-
-const spectrumData24 = Array.from({length:14},(_,i)=>({ch:i+1,v: i===0?55:i===5?75:i===10?45:Math.random()*15}));
-const spectrumData5  = Array.from({length:20},(_,i)=>({ch:36+i*4,v: i===0?50:i===4?65:i===12?40:Math.random()*10}));
-
-const reports = [
-  {id:'REP-001',loc:'Main Campus - Wing A',date:'2024-05-15',nets:12,signal:'-52 dBm',sigColor:c.green},
-  {id:'REP-002',loc:'Basement Storage',date:'2024-05-18',nets:8,signal:'-68 dBm',sigColor:c.yellow},
-  {id:'REP-003',loc:'Executive Suite',date:'2024-05-20',nets:15,signal:'-45 dBm',sigColor:c.green},
-];
