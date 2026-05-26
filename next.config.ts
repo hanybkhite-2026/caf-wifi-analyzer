@@ -8,10 +8,17 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // silences cross-origin warnings in Cloud Workstation environment
+  allowedDevOrigins: [
+    '6000-firebase-studio-1779618280680.cluster-yy7ncoxb5zd4ouvntrhoc3go3k.cloudworkstations.dev',
+    '9000-firebase-studio-1779618280680.cluster-yy7ncoxb5zd4ouvntrhoc3go3k.cloudworkstations.dev',
+    '*.cloudworkstations.dev'
+  ],
   experimental: {
     serverActions: {
       allowedOrigins: [
         '6000-firebase-studio-1779618280680.cluster-yy7ncoxb5zd4ouvntrhoc3go3k.cloudworkstations.dev',
+        '9000-firebase-studio-1779618280680.cluster-yy7ncoxb5zd4ouvntrhoc3go3k.cloudworkstations.dev',
         '*.cloudworkstations.dev'
       ],
     },
