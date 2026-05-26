@@ -26,14 +26,17 @@ const OUI={'00:0b:86':'ARUBA NETWORKS','7c:1c:f1':'HUAWEI TECHNOLOGIES','98:da:c
 const vendor=(mac)=>{const k=mac.slice(0,8).toLowerCase().replace(/-/g,':');return OUI[k]||'UNKNOWN VENDOR';};
 
 // ── Security format (matches Android WifiInfo) ─────────────────────────────
+// Security capabilities string — matches exact Android ScanResult format shown in WiFiAnalyzer screenshot
 const fmtSec=(secs)=>{
   const parts=[];
-  if(secs.includes('WPA3'))parts.push('[WPA3-SAE-CCMP]');
-  if(secs.includes('WPA2'))parts.push('[WPA2-PSK-CCMP]');
-  if(secs.includes('WPA'))parts.push('[WPA-PSK-CCMP+TKIP]');
-  if(secs.includes('WPS'))parts.push('[WPS]');
-  if(secs.includes('WEP'))parts.push('[WEP]');
-  parts.push('[ESS]');
+  if(secs.includes('WPA3')) parts.push('[WPA3-SAE-CCMP]');
+  if(secs.includes('WPA2')&&secs.includes('WPA')) parts.push('[WPA2-PSK-CCMP+TKIP]');
+  else if(secs.includes('WPA2')) parts.push('[WPA2-PSK-CCMP]');
+  if(secs.includes('WPA')&&!secs.includes('WPA2')) parts.push('[WPA-PSK-CCMP+TKIP]');
+  if(secs.includes('WPS')) parts.push('[WPS]');
+  if(secs.includes('WEP')) parts.push('[WEP]');
+  if(secs.length===0||(!secs.includes('WPA')&&!secs.includes('WPA2')&&!secs.includes('WPA3')&&!secs.includes('WEP'))) parts.push('[ESS]');
+  else parts.push('[ESS]');
   return parts.join('');
 };
 
@@ -500,46 +503,35 @@ export default function App(){
               {/* AP List */}
               {displayAPs.map((ap,i)=>(
                 <div key={ap.mac} style={{...css.apRow,background:ap.connected?dark?'#0d2137':'#e3f2fd':i%2===0?T.card:T.card2}} onClick={()=>setSelectedAP(s=>s?.mac===ap.mac?null:ap)}>
-                  {/* Row 1: SSID + MAC */}
-                  <div style={{fontWeight:'700',fontSize:'13px',marginBottom:'2px',color:T.text}}>
-                    {ap.ssid} <span style={{color:T.sub,fontWeight:'400',fontSize:'11px'}}>({ap.mac})</span>
+                  {/* LINE 1: SSID (MAC) — exact WiFiAnalyzer format */}
+                  <div style={{fontWeight:'700',fontSize:'14px',marginBottom:'3px',color:T.text}}>
+                    {ap.ssid} <span style={{color:T.sub,fontWeight:'400',fontSize:'12px'}}>({ap.mac})</span>
                   </div>
-                  {/* Row 2: Signal + CH + Freq + Distance */}
-                  <div style={{fontSize:'12px',marginBottom:'6px',fontFamily:'monospace'}}>
+                  {/* LINE 2: signal CH channel freq distance — exact format from screenshot */}
+                  <div style={{fontSize:'13px',marginBottom:'5px',fontFamily:'monospace'}}>
                     <span style={{color:sigCol(ap.signal),fontWeight:'700'}}>{Math.round(ap.signal)}dBm</span>
                     <span style={{color:T.sub}}> CH </span>
                     <span style={{color:T.cyan,fontWeight:'700'}}>{ap.chLabel}</span>
                     <span style={{color:T.sub}}> {ap.freq}MHz</span>
                     {ap.dist&&<span style={{color:T.cyan,fontWeight:'600'}}> {ap.dist}m</span>}
+                    {ap.connected&&ap.mbps&&<span style={{color:T.cyan,fontWeight:'600'}}> {ap.mbps}Mbps</span>}
+                    {ap.connected&&ap.ip&&<span style={{color:T.cyan}}> {ap.ip}</span>}
                   </div>
-                  {/* Row 3: Fan + Freq range + Vendor + Security */}
+                  {/* LINE 3: fan-icon  freqStart - freqEnd (bwMHz) VENDOR */}
                   <div style={{display:'flex',alignItems:'flex-start',gap:'10px'}}>
-                    <WifiFan signal={Math.round(ap.signal)} size={40} connected={ap.connected}/>
-                    <div style={{flex:1}}>
-                      <div style={{fontSize:'11px',color:T.cyan,fontFamily:'monospace'}}>
+                    <WifiFan signal={Math.round(ap.signal)} size={42} connected={ap.connected}/>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:'12px',color:T.cyan,fontFamily:'monospace',marginBottom:'4px'}}>
                         {ap.freqStart} - {ap.freqEnd} ({ap.bw}MHz)
-                        <span style={{color:T.sub,marginLeft:'6px'}}>{ap.vend.length>16?ap.vend.slice(0,15)+'…':ap.vend}</span>
+                        <span style={{color:T.sub,marginLeft:'6px'}}>{ap.vend.length>18?ap.vend.slice(0,17)+'…':ap.vend}</span>
                       </div>
-                      <div style={{display:'flex',alignItems:'center',gap:'5px',marginTop:'4px',flexWrap:'wrap'}}>
-                        {/* Signal bars */}
-                        <div style={{display:'flex',gap:'2px',alignItems:'flex-end',marginRight:'3px'}}>
-                          {[1,2,3,4].map(b=>(
-                            <div key={b} style={{width:'4px',height:`${b*4+1}px`,background:sigLvl(ap.signal)>=b?sigCol(ap.signal):T.border,borderRadius:'1px'}}/>
-                          ))}
-                        </div>
-                        {/* Lock */}
-                        <span style={{fontSize:'11px',color:T.sub}}>{ap.security.some(s=>['WPA2','WPA3','WPA'].includes(s))?'🔒':'🔓'}</span>
-                        {/* Security string */}
-                        <span style={{fontSize:'10px',color:T.sub,fontFamily:'monospace'}}>{ap.secStr}</span>
-                        {/* WiFi std */}
-                        {ap.std&&<span style={{background:T.cyan+'22',color:T.cyan,fontSize:'9px',fontWeight:'700',padding:'1px 5px',borderRadius:'3px'}}>{ap.std}</span>}
+                      {/* LINE 4: lock-icon  [WPA2-PSK-CCMP+TKIP][WPS][ESS] */}
+                      <div style={{display:'flex',alignItems:'center',gap:'4px',flexWrap:'wrap'}}>
+                        <span style={{fontSize:'13px'}}>{ap.security.some(s=>['WPA3','WPA2','WPA'].includes(s))?'🔒':'🔓'}</span>
+                        <span style={{fontSize:'11px',color:T.sub,fontFamily:'monospace',wordBreak:'break-all'}}>{ap.secStr}</span>
                       </div>
-                      {/* Connected AP extra line */}
-                      {ap.connected&&!compactView&&(
-                        <div style={{fontSize:'12px',color:T.cyan,fontWeight:'600',marginTop:'3px'}}>
-                          {ap.mbps&&`${ap.mbps}Mbps`}{ap.ip&&` ${ap.ip}`}
-                        </div>
-                      )}
+                      {/* WiFi std badge */}
+                      {ap.std&&<div style={{marginTop:'4px'}}><span style={{background:T.cyan+'22',color:T.cyan,fontSize:'10px',fontWeight:'700',padding:'1px 6px',borderRadius:'3px'}}>WiFi {ap.std}</span></div>}
                     </div>
                   </div>
                   {/* Expanded detail */}
