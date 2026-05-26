@@ -100,6 +100,7 @@ export default function App() {
   const [loginErr, setLoginErr]     = useState('');
   const [dark, setDark]             = useState(true);
   const [tab, setTab]               = useState('access-points');
+  
   // Access Points
   const [auditEnv, setAuditEnv]     = useState('');
   const [auditRunning, setAuditRunning] = useState(false);
@@ -107,7 +108,7 @@ export default function App() {
   const [auditDone, setAuditDone]   = useState(false);
   
   // Geiger Tracker State
-  const [locating, setLocating]     = useState(null);
+  const [locating, setLocating]     = useState<string | null>(null);
   const [currentSignal, setCurrentSignal] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -120,10 +121,10 @@ export default function App() {
   const [graphBand, setGraphBand]   = useState('2.4');
   // Speed Test
   const [speedRunning, setSpeedRunning] = useState(false);
-  const [speedResult, setSpeedResult]   = useState(null);
+  const [speedResult, setSpeedResult]   = useState<{dl:number, ul:number, ping:number} | null>(null);
   const [speedProgress, setSpeedProgress] = useState(0);
   // Export
-  const [selectedReport, setSelectedReport] = useState(null);
+  const [selectedReport, setSelectedReport] = useState<any>(null);
   const [reportSearch, setReportSearch]     = useState('');
   // Vendors
   const [members, setMembers]       = useState(INIT_MEMBERS);
@@ -132,14 +133,14 @@ export default function App() {
   const [inviteRole, setInviteRole] = useState('Junior Tech');
   const [inviteName, setInviteName] = useState('');
   // Settings
-  const [accordion, setAccordion]   = useState({});
+  const [accordion, setAccordion]   = useState<Record<number, boolean>>({});
   const [notifs, setNotifs]         = useState(true);
   // Notifications
-  const [toasts, setToasts]         = useState([]);
+  const [toasts, setToasts]         = useState<any[]>([]);
 
   const T = dark ? DARK : LIGHT;
 
-  const toast = (msg, type='info') => {
+  const toast = (msg: string, type: string = 'info') => {
     const id = Date.now();
     setToasts(t=>[...t,{id,msg,type}]);
     setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)),3500);
@@ -189,7 +190,7 @@ export default function App() {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [locating, currentSignal, isMuted]);
 
-  const doLogin = (e) => {
+  const doLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if(loginUser==='admin' && loginPass==='admin123') { setLoggedIn(true); setLoginErr(''); }
     else setLoginErr('Invalid credentials. Use admin / admin123');
@@ -206,7 +207,7 @@ export default function App() {
     toast(`✅ Audit complete for "${auditEnv}"! Found ${APS_DATA.length} networks.`,'success');
   };
 
-  const locateAP = async (ssid) => {
+  const locateAP = (ssid: string) => {
     setLocating(ssid);
     toast(`📍 AP Signal Tracker active for "${ssid}"`,'info');
   };
@@ -223,7 +224,7 @@ export default function App() {
     toast(`⚡ Speed test complete! ${result.dl} Mbps download`,'success');
   };
 
-  const inviteMember = (e) => {
+  const inviteMember = (e: React.FormEvent) => {
     e.preventDefault();
     if(!inviteEmail||!inviteName){ toast('Please fill all fields','error'); return; }
     const newMember = { id:Date.now(), name:inviteName, role:inviteRole, status:'Active', scans:0, perf:0, avatar:'👤', email:inviteEmail };
@@ -232,17 +233,17 @@ export default function App() {
     toast(`✅ Invitation sent to ${inviteEmail}`,'success');
   };
 
-  const removeMember = (id,name) => {
+  const removeMember = (id: number, name: string) => {
     setMembers(m=>m.filter(x=>x.id!==id));
     toast(`🗑️ ${name} removed from team`,'info');
   };
 
-  const exportReport = (format, reportId) => {
+  const exportReport = (format: string, reportId: string) => {
     toast(`📥 Exporting ${reportId} as ${format}...`,'info');
     setTimeout(()=>toast(`✅ ${reportId}.${format.toLowerCase()} downloaded!`,'success'),1500);
   };
 
-  const sigColor = (dbm) => dbm>=-60?T.green:dbm>=-75?T.yellow:T.red;
+  const sigColor = (dbm: number) => dbm>=-60?T.green:dbm>=-75?T.yellow:T.red;
   const filteredReports = REPORTS.filter(r=>r.loc.toLowerCase().includes(reportSearch.toLowerCase())||r.id.toLowerCase().includes(reportSearch.toLowerCase()));
 
   // ── CHARTS DATA ─────────────────────────────────────────────────────────
@@ -258,9 +259,6 @@ export default function App() {
     strength: Math.abs(n.signal)
   })), []);
 
-  const spectrumData24 = useMemo(() => Array.from({length:14},(_,i)=>({ch:i+1,v: i===0?55:i===5?75:i===10?45:Math.random()*15})), []);
-  const spectrumData5  = useMemo(() => Array.from({length:20},(_,i)=>({ch:36+i*4,v: i===0?50:i===4?65:i===12?40:Math.random()*10})), []);
-
   // ── STYLES (theme-aware) ─────────────────────────────────────────────────
   const s = {
     app: { display:'flex', minHeight:'100vh', background:T.bg, color:T.text, fontFamily:"'Inter','Segoe UI',system-ui,sans-serif", position:'relative' },
@@ -269,29 +267,29 @@ export default function App() {
     topbar: { background:T.sidebar, borderBottom:`1px solid ${T.border}`, padding:'12px 24px', display:'flex', justifyContent:'space-between', alignItems:'center', position:'sticky', top:0, zIndex:10 },
     content: { padding:'24px', flex:1 },
     logoWrap: { display:'flex', alignItems:'center', gap:'10px', marginBottom:'28px', padding:'0 4px' },
-    navBtn: (a) => ({ display:'flex', alignItems:'center', gap:'9px', padding:'9px 12px', borderRadius:'8px', cursor:'pointer', border:'none', textAlign:'left', width:'100%', background: a?'linear-gradient(135deg,#1e40af,#2563eb)':'transparent', color: a?'#fff':T.muted, fontSize:'11px', fontWeight:'700', letterSpacing:'0.06em', transition:'all 0.15s', marginBottom:'2px' }),
+    navBtn: (a: boolean) => ({ display:'flex', alignItems:'center', gap:'9px', padding:'9px 12px', borderRadius:'8px', cursor:'pointer', border:'none', textAlign:'left', width:'100%', background: a?'linear-gradient(135deg,#1e40af,#2563eb)':'transparent', color: a?'#fff':T.muted, fontSize:'11px', fontWeight:'700', letterSpacing:'0.06em', transition:'all 0.15s', marginBottom:'2px' }),
     card: { background:T.card, border:`1px solid ${T.border}`, borderRadius:'12px', padding:'20px', marginBottom:'16px' },
     card2: { background:T.card2, border:`1px solid ${T.border}`, borderRadius:'10px', padding:'14px' },
     row: { background:T.card2, border:`1px solid ${T.border}`, borderRadius:'10px', padding:'14px 16px', marginBottom:'10px', display:'flex', alignItems:'center', gap:'14px' },
     input: { background:T.card2, border:`1px solid ${T.border}`, color:T.text, padding:'10px 14px', borderRadius:'8px', fontSize:'13px', outline:'none', width:'100%', boxSizing:'border-box' },
     select: { background:T.card2, border:`1px solid ${T.border}`, color:T.text, padding:'10px 14px', borderRadius:'8px', fontSize:'13px', outline:'none', width:'100%', cursor:'pointer' },
-    btn: (bg,tc) => ({ background:bg||T.blue, color:tc||'#fff', border:'none', padding:'9px 18px', borderRadius:'8px', cursor:'pointer', fontSize:'12px', fontWeight:'700', display:'inline-flex', alignItems:'center', gap:'6px', transition:'opacity 0.2s' }),
+    btn: (bg?: string, tc?: string) => ({ background:bg||T.blue, color:tc||'#fff', border:'none', padding:'9px 18px', borderRadius:'8px', cursor:'pointer', fontSize:'12px', fontWeight:'700', display:'inline-flex', alignItems:'center', gap:'6px', transition:'opacity 0.2s' }),
     btnGhost: { background:'transparent', border:`1px solid ${T.border}`, color:T.dim, padding:'8px 14px', borderRadius:'8px', cursor:'pointer', fontSize:'12px', fontWeight:'700', display:'inline-flex', alignItems:'center', gap:'6px' },
-    table: { width:'100%', borderCollapse:'collapse' },
-    th: { textAlign:'left', padding:'10px 14px', borderBottom:`1px solid ${T.border}`, color:T.muted, fontSize:'10px', letterSpacing:'0.08em', textTransform:'uppercase' },
+    table: { width:'100%', borderCollapse:'collapse' as const },
+    th: { textAlign:'left' as const, padding:'10px 14px', borderBottom:`1px solid ${T.border}`, color:T.muted, fontSize:'10px', letterSpacing:'0.08em', textTransform:'uppercase' as const },
     td: { padding:'12px 14px', borderBottom:`1px solid ${T.border}`, fontSize:'13px' },
-    badge: (bg,tc) => ({ background:bg, color:tc, fontSize:'10px', fontWeight:'700', padding:'2px 9px', borderRadius:'20px', display:'inline-block' }),
-    label: { fontSize:'10px', color:T.muted, letterSpacing:'0.08em', textTransform:'uppercase', display:'block', marginBottom:'4px' },
+    badge: (bg: string, tc: string) => ({ background:bg, color:tc, fontSize:'10px', fontWeight:'700', padding:'2px 9px', borderRadius:'20px', display:'inline-block' }),
+    label: { fontSize:'10px', color:T.muted, letterSpacing:'0.08em', textTransform:'uppercase' as const, display:'block', marginBottom:'4px' },
     statCard: { background:T.card, border:`1px solid ${T.border}`, borderRadius:'12px', padding:'18px', display:'flex', justifyContent:'space-between', alignItems:'flex-start' },
-    footer: { background:T.sidebar, borderTop:`1px solid ${T.border}`, padding:'8px 24px', display:'flex', justifyContent:'space-between', fontSize:'10px', color:T.border, letterSpacing:'0.06em', flexWrap:'wrap', gap:'4px' },
-    overlay: { position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:100, padding:'16px' },
+    footer: { background:T.sidebar, borderTop:`1px solid ${T.border}`, padding:'8px 24px', display:'flex', justifyContent:'space-between', fontSize:'10px', color:T.border, letterSpacing:'0.06em', flexWrap:'wrap' as const, gap:'4px' },
+    overlay: { position:'fixed' as const, inset:0, background:'rgba(0,0,0,0.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:100, padding:'16px' },
     modal: { background:T.card, border:`1px solid ${T.border}`, borderRadius:'14px', padding:'28px', maxWidth:'460px', width:'100%' },
     progressTrack: { background:T.border, borderRadius:'4px', height:'6px', overflow:'hidden', marginTop:'8px' },
-    progressFill: (pct,color) => ({ width:`${pct}%`, height:'100%', background:color||T.blue, borderRadius:'4px', transition:'width 0.2s' }),
+    progressFill: (pct: number, color?: string) => ({ width:`${pct}%`, height:'100%', background:color||T.blue, borderRadius:'4px', transition:'width 0.2s' }),
     accordion: { borderBottom:`1px solid ${T.border}` },
-    accBtn: { width:'100%', background:'transparent', border:'none', color:T.text, padding:'15px 0', display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer', fontSize:'14px', fontWeight:'600', textAlign:'left' },
-    toggle: (on) => ({ width:'44px', height:'24px', borderRadius:'12px', background:on?T.blue:T.border, cursor:'pointer', border:'none', position:'relative', transition:'background 0.2s', flexShrink:0 }),
-    toggleDot: (on) => ({ position:'absolute', top:'3px', left:on?'23px':'3px', width:'18px', height:'18px', borderRadius:'50%', background:'#fff', transition:'left 0.2s' }),
+    accBtn: { width:'100%', background:'transparent', border:'none', color:T.text, padding:'15px 0', display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer', fontSize:'14px', fontWeight:'600', textAlign:'left' as const },
+    toggle: (on: boolean) => ({ width:'44px', height:'24px', borderRadius:'12px', background:on?T.blue:T.border, cursor:'pointer', border:'none', position:'relative' as const, transition:'background 0.2s', flexShrink:0 }),
+    toggleDot: (on: boolean) => ({ position:'absolute' as const, top:'3px', left:on?'23px':'3px', width:'18px', height:'18px', borderRadius:'50%', background:'#fff', transition:'left 0.2s' }),
   };
 
   // ── LOGIN ─────────────────────────────────────────────────────────────────
@@ -315,9 +313,6 @@ export default function App() {
           </div>
           <button style={{...s.btn(),justifyContent:'center',padding:'12px'}} type="submit">Sign In →</button>
         </form>
-        <div style={{background:dark?'#1e3a5f22':'#eff6ff',border:`1px solid ${T.blue}44`,borderRadius:'8px',padding:'10px 14px',marginTop:'16px',fontSize:'12px',color:T.blue,textAlign:'center'}}>
-          Demo credentials: <strong>admin</strong> / <strong>admin123</strong>
-        </div>
       </div>
     </div>
   );
@@ -543,7 +538,7 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(CHANNEL_RATINGS[ratingBand]||[]).map((r,i)=>(
+                    {(CHANNEL_RATINGS[ratingBand as keyof typeof CHANNEL_RATINGS]||[]).map((r,i)=>(
                       <tr key={i}>
                         <td style={s.td}><span style={{color:T.yellow,letterSpacing:'2px'}}>{'★'.repeat(r.stars)}{'☆'.repeat(10-r.stars)}</span></td>
                         <td style={{...s.td,color:T.cyan,fontWeight:'700'}}>{r.ch} <span style={{color:T.muted,fontSize:'11px'}}>20 MHz</span></td>
@@ -616,27 +611,27 @@ export default function App() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'16px'}}>
                 <div style={{...s.card,marginBottom:0}}>
                   <div style={{fontWeight:'700',fontSize:'14px',marginBottom:'3px'}}>≋ SSID Bandwidth Distribution</div>
-                  <div style={{fontSize:'11px',color:T.muted,marginBottom:'12px'}}>Throughput capacity (Mbps)</div>
+                  <div style={{fontSize:'11px',color:T.muted,marginBottom:'12px'}}>Throughput capacity across discovered CAF networks (Mbps)</div>
                   <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={performanceData} layout="vertical" margin={{left:10}}>
+                    <BarChart data={SSID_BW} layout="vertical" margin={{left:20}}>
                       <CartesianGrid stroke={T.border} strokeDasharray="3 3" />
                       <XAxis type="number" tick={{fill:T.muted,fontSize:10}} />
-                      <YAxis dataKey="name" type="category" width={85} tick={{fill:T.muted,fontSize:10}} />
+                      <YAxis dataKey="name" type="category" width={80} tick={{fill:T.muted,fontSize:10}} />
                       <Tooltip contentStyle={{background:T.card,border:`1px solid ${T.border}`,borderRadius:'8px',color:T.text}} />
-                      <Bar dataKey="bandwidth" fill={T.blue} radius={[0,4,4,0]} />
+                      <Bar dataKey="v" fill={T.blue} radius={[0,4,4,0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
                 <div style={{...s.card,marginBottom:0}}>
                   <div style={{fontWeight:'700',fontSize:'14px',marginBottom:'3px'}}>⚠ Interference Analysis</div>
-                  <div style={{fontSize:'11px',color:T.muted,marginBottom:'12px'}}>Estimated interference (0–100)</div>
+                  <div style={{fontSize:'11px',color:T.muted,marginBottom:'12px'}}>Estimated interference impact per SSID (0–100 scale)</div>
                   <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={performanceData}>
+                    <BarChart data={INTERFERENCE} margin={{left:0}}>
                       <CartesianGrid stroke={T.border} strokeDasharray="3 3" />
                       <XAxis dataKey="name" tick={{fill:T.muted,fontSize:9}} />
                       <YAxis tick={{fill:T.muted,fontSize:10}} domain={[0,100]} />
                       <Tooltip contentStyle={{background:T.card,border:`1px solid ${T.border}`,borderRadius:'8px',color:T.text}} />
-                      <Bar dataKey="interference" fill={T.yellow} radius={[4,4,0,0]} />
+                      <Bar dataKey="v" fill={T.yellow} radius={[4,4,0,0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -646,12 +641,12 @@ export default function App() {
                 <div style={{...s.card,marginBottom:0}}>
                   <div style={{fontWeight:'700',fontSize:'14px',marginBottom:'12px'}}>Signal Strength Comparison</div>
                   <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={signalData}>
+                    <BarChart data={SIG_STRENGTH}>
                       <CartesianGrid stroke={T.border} strokeDasharray="3 3" />
-                      <XAxis dataKey="network" tick={{fill:T.muted,fontSize:9}} />
+                      <XAxis dataKey="name" tick={{fill:T.muted,fontSize:9}} />
                       <YAxis tick={{fill:T.muted,fontSize:10}} />
                       <Tooltip contentStyle={{background:T.card,border:`1px solid ${T.border}`,borderRadius:'8px',color:T.text}} />
-                      <Bar dataKey="strength" fill={T.purple} radius={[4,4,0,0]} />
+                      <Bar dataKey="v" fill={T.purple} radius={[4,4,0,0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -660,7 +655,7 @@ export default function App() {
                   <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
                       <Pie data={NET_TYPES} cx="50%" cy="50%" outerRadius={72} dataKey="value" label={({name,percent})=>`${name} ${(percent*100).toFixed(0)}%`} labelLine={{stroke:T.muted}} fontSize={11}>
-                        {NET_TYPES.map((_,i)=><Cell key={i} fill={PIE_COLORS[i]} />)}
+                        {NET_TYPES.map((_,i)=><Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                       </Pie>
                       <Tooltip contentStyle={{background:T.card,border:`1px solid ${T.border}`,borderRadius:'8px',color:T.text}} />
                     </PieChart>
@@ -818,7 +813,7 @@ export default function App() {
                       ))}
                     </div>
                     <div style={{fontSize:'12px',fontWeight:'700',color:T.muted,marginBottom:'10px'}}>NETWORKS FOUND</div>
-                    {selectedReport.networks.map((n,i)=>(
+                    {selectedReport.networks.map((n:any,i:number)=>(
                       <div key={i} style={s.row}>
                         <div style={{width:'8px',height:'8px',borderRadius:'50%',background:sigColor(n.sig),flexShrink:0}} />
                         <span style={{fontWeight:'600'}}>{n.name}</span>
@@ -1026,7 +1021,25 @@ export default function App() {
             <div style={{maxWidth:'760px',margin:'0 auto',textAlign:'center'}}>
               <div style={{width:'72px',height:'72px',background:'linear-gradient(135deg,#1e3a5f,#1e40af)',border:`2px solid ${T.blue}`,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'28px',margin:'0 auto 20px'}}>📡</div>
               <div style={{fontSize:'30px',fontWeight:'800',marginBottom:'8px'}}>NetPulse CAF Analyzer</div>
-              <div style={{fontSize:'14px',color:T.muted,marginBottom:'40px'}}>v3.0.0 Enterprise Infrastructure Monitoring</div>
+              <div style={{fontSize:'14px',color:T.muted,marginBottom:'24px'}}>v3.0.0 Enterprise Infrastructure Monitoring</div>
+              
+              <div style={{background:T.card2, border:`1px solid ${T.border}`, borderRadius:'14px', padding:'24px', textAlign:'left', marginBottom:'24px'}}>
+                <div style={{fontSize:'13px', fontWeight:'700', color:T.blue, marginBottom:'12px', letterSpacing:'0.05em'}}>ENTERPRISE CAPABILITIES OVERVIEW</div>
+                <p style={{fontSize:'14px', color:T.dim, lineHeight:'1.8', marginBottom:'16px'}}>
+                  CAF-WIFI Analyzer is a professional-grade infrastructure management tool designed for deep spectral analysis and high-precision hardware localization within enterprise environments. It bridges the gap between basic Wi-Fi survey tools and high-end spectral hardware by providing real-time Gaussian-modeled spectral "hump" charts to identify channel overlap and interference.
+                </p>
+                <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px'}}>
+                   <div>
+                      <div style={{fontSize:'11px', fontWeight:'800', color:T.text, marginBottom:'6px'}}>SIGNAL TRACKER (GEIGER MODE)</div>
+                      <p style={{fontSize:'12px', color:T.muted, lineHeight:'1.5'}}>Utilizes the Web Audio API to provide audible beep feedback and pitch scaling based on real-time dBm improvements, allowing technicians to locate hidden Access Points behind walls or ceilings.</p>
+                   </div>
+                   <div>
+                      <div style={{fontSize:'11px', fontWeight:'800', color:T.text, marginBottom:'6px'}}>SPECTRAL ANALYSIS</div>
+                      <p style={{fontSize:'12px', color:T.muted, lineHeight:'1.5'}}>Advanced visualization of the 2.4GHz and 5GHz bands using Gaussian distribution models to highlight cross-channel interference and co-channel congestion patterns.</p>
+                   </div>
+                </div>
+              </div>
+
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px',marginBottom:'14px'}}>
                 {[{i:'🛡️',l:'Secure Analysis',t:'Designed specifically for high-security environments, NetPulse provides real-time spectral analysis of CAF-WIFI networks without compromising endpoint security.'},{i:'📡',l:'Aruba Optimized',t:'Deep integration with Aruba Access Point hardware enables specialized features like hidden AP tracking and automated channel optimization.'}].map((x,i)=>(
                   <div key={i} style={{...s.card,textAlign:'left',marginBottom:0}}>
