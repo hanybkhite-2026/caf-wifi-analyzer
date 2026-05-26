@@ -6,9 +6,9 @@ import {
   PieChart, Pie, Cell, AreaChart, Area, LineChart, Line 
 } from 'recharts';
 import { 
-  Wifi, Sun, Moon, Settings, BarChart3, Network, TrendingUp, 
+  Wifi, Sun, Moon, Settings, Radio, TrendingUp, 
   Activity, Zap, Volume2, VolumeX, Crosshair, MapPin, Play, 
-  Loader2, X, Lock, Mail, ShieldCheck, LogOut, Info, Radio, 
+  Loader2, X, Lock, Mail, ShieldCheck, LogOut, Info, 
   LayoutDashboard, FileUp, Users, LineChart as LineChartIcon,
   ChevronDown, Star, AlertTriangle, AlertCircle, RefreshCw,
   MoreVertical, Trash2, UserPlus, CheckCircle2, Clock, 
@@ -17,37 +17,28 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 // Mock Data
-import { MOCK_NETWORKS, WEEKLY_ACTIVITY, SPEED_HISTORY, TEAM_MEMBERS, REPORTS } from "@/lib/mock-data";
+import { MOCK_NETWORKS, WEEKLY_ACTIVITY, SPEED_HISTORY, TEAM_MEMBERS, REPORTS, type NetworkScan } from "@/lib/mock-data";
 
-// Components
-import { DashboardTab } from "@/components/dashboard/dashboard-tab";
+// Sub-components (Simplified versions for stability)
 import { ScannerTab } from "@/components/scanner/scanner-tab";
+import { ChannelRatingTab } from "@/components/dashboard/channel-rating-tab";
+import { DashboardTab } from "@/components/dashboard/dashboard-tab";
 import { AnalyticsTab } from "@/components/analytics/analytics-tab";
 import { ReportsTab } from "@/components/reports/reports-tab";
 import { AdminTab } from "@/components/admin/admin-tab";
 import { SettingsTab } from "@/components/settings/settings-tab";
 import { AboutTab } from "@/components/about/about-tab";
-import { ChannelRatingTab } from "@/components/dashboard/channel-rating-tab";
 
 export default function CAFWiFiAnalyzer() {
   const [isMounted, setIsMounted] = useState(false);
   const { toast } = useToast();
 
-  // Auth State
-  const [isAuthenticated, setIsAuthenticated] = useState(true); // Default to true for preview/MVP
-  const [email, setEmail] = useState('admin@caf.com');
-  const [password, setPassword] = useState('admin123');
-  const [loginError, setLoginError] = useState('');
-
   // App State
   const [darkMode, setDarkMode] = useState(true);
   const [activeTab, setActiveTab] = useState('access-points');
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // Configuration for Navigation
+  // Navigation Configuration
   const tabs = useMemo(() => [
     { id: "access-points", label: "Access Points", icon: Radio },
     { id: "channel-rating", label: "Channel Rating", icon: SignalIcon },
@@ -59,65 +50,20 @@ export default function CAFWiFiAnalyzer() {
     { id: "about", label: "About", icon: Info },
   ], []);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email === 'admin@caf.com' && password === 'admin123') {
-      setIsAuthenticated(true);
-      toast({ title: "System Initialized", description: "Operational mode active." });
-    } else {
-      setLoginError('Invalid security key. Use: admin@caf.com / admin123');
-    }
-  };
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    setActiveTab('access-points');
   };
 
   if (!isMounted) return null;
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-4 font-headline">
-        <div className="w-full max-w-md bg-slate-900/50 rounded-2xl shadow-2xl p-8 border border-slate-800">
-          <div className="flex justify-center mb-6">
-            <div className="bg-blue-600 rounded-2xl p-4 shadow-lg shadow-blue-500/20">
-              <Wifi className="w-12 h-12 text-white" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-center mb-1 text-white">NetPulse CAF</h1>
-          <p className="text-center text-gray-400 mb-8 text-sm">Enterprise Infrastructure Analyzer</p>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 mb-2 uppercase tracking-widest">Technician Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800/50 border border-slate-700 text-white focus:outline-none focus:border-blue-500 text-sm" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 mb-2 uppercase tracking-widest">Security Key</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800/50 border border-slate-700 text-white focus:outline-none focus:border-blue-500 text-sm" />
-              </div>
-            </div>
-            {loginError && <div className="text-red-400 text-xs text-center font-bold uppercase tracking-tighter">{loginError}</div>}
-            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-500/20 text-sm uppercase tracking-widest">
-              Access Infrastructure
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-[#0f172a] text-white' : 'bg-slate-50 text-slate-900'} font-body transition-colors duration-300`}>
       <div className="flex h-screen overflow-hidden">
-        {/* Sidebar Nav */}
+        {/* Sidebar Navigation */}
         <aside className={`w-20 lg:w-64 border-r ${darkMode ? 'border-slate-800 bg-slate-900/50' : 'border-slate-200 bg-white'} flex flex-col hidden md:flex`}>
           <div className="p-6 border-b border-inherit">
             <div className="flex items-center gap-3">
@@ -151,7 +97,7 @@ export default function CAFWiFiAnalyzer() {
           </div>
         </aside>
 
-        {/* Main Content */}
+        {/* Main Interface Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top Header */}
           <header className={`h-16 border-b flex items-center justify-between px-8 sticky top-0 z-40 backdrop-blur-md ${darkMode ? 'bg-[#0f172a]/80 border-slate-800' : 'bg-white/80 border-slate-200'}`}>
@@ -184,7 +130,7 @@ export default function CAFWiFiAnalyzer() {
             </div>
           </main>
 
-          {/* Footer Status Bar */}
+          {/* Infrastructure Footer */}
           <footer className={`h-10 border-t flex items-center justify-between px-8 text-[9px] font-mono tracking-widest uppercase transition-colors ${darkMode ? 'bg-[#0f172a] border-slate-800 text-slate-500' : 'bg-white border-slate-200 text-slate-400'}`}>
             <div className="flex gap-8">
               <span>SYSTEM: v3.6.0-ENTERPRISE-PROD</span>
