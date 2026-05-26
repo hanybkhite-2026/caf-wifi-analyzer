@@ -5,6 +5,12 @@ import {
   AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
+import { 
+  Wifi, Radio, Signal, LayoutDashboard, LineChart as LineChartIcon, 
+  FileUp, Users, Settings, Info, Bell, ShieldCheck, Moon, Sun,
+  Volume2, VolumeX, Crosshair, X, Play, Loader2, MapPin, CheckCircle2,
+  Activity, Clock, MoreVertical, Trash2, Eye, Download, Search, Filter, Sparkles, ChevronRight
+} from 'lucide-react';
 
 // ── THEME ────────────────────────────────────────────────────────────────────
 const DARK = {
@@ -41,6 +47,34 @@ const WEEKLY = [
   {d:'Thu',v:68,e:25},{d:'Fri',v:45,e:14},{d:'Sat',v:30,e:10},{d:'Sun',v:25,e:8},
 ];
 
+const SSID_BW = [
+  {name:'CAF-WIFI-5G',v:850},{name:'CAF-WIFI-2G',v:300},
+  {name:'CAF-GUEST',v:450},{name:'VTEL-Fiber',v:120},
+  {name:'Mamon2_5G',v:680},{name:'*hidden*',v:200},
+];
+const INTERFERENCE = [
+  {name:'CAF-WIFI-5G',v:15},{name:'CAF-WIFI-2G',v:40},{name:'CAF-GUEST',v:25},
+  {name:'VTEL-Fiber',v:80},{name:'Mamon2_5G',v:10},{name:'*hidden*',v:50},
+];
+const SIG_STRENGTH = [
+  {name:'CAF-WIFI-5G',v:45},{name:'CAF-WIFI-2G',v:67},{name:'CAF-GUEST',v:79},
+  {name:'VTEL-Fiber',v:85},{name:'Mamon2_5G',v:86},{name:'*hidden*',v:87},
+];
+const NET_TYPES = [
+  {name:'Main',value:40},{name:'Guest',value:25},{name:'IoT',value:20},{name:'Admin',value:15},
+];
+const PIE_COLORS = ['#3b82f6','#06b6d4','#a855f7','#f59e0b'];
+
+const SPECTRUM_24 = Array.from({length:13},(_,i)=>({
+  ch:i+1, v: i===0?55: i===5?75: i===10?45: Math.round(Math.random()*15+2)
+}));
+const SPECTRUM_5 = [
+  {ch:36,v:50},{ch:40,v:8},{ch:44,v:5},{ch:48,v:6},{ch:52,v:65},
+  {ch:56,v:7},{ch:60,v:5},{ch:64,v:8},{ch:100,v:6},{ch:104,v:5},
+  {ch:108,v:7},{ch:112,v:6},{ch:116,v:40},{ch:120,v:8},{ch:124,v:5},
+  {ch:128,v:6},{ch:132,v:5},{ch:136,v:7},{ch:140,v:8},{ch:149,v:6},
+];
+
 const CHANNEL_RATINGS = {
   '2.4 GHz': [
     {ch:2,stars:10,nets:0},{ch:3,stars:10,nets:0},{ch:4,stars:10,nets:0},
@@ -60,7 +94,7 @@ const CHANNEL_RATINGS = {
   ],
 };
 
-const REPORTS = [
+const REPORTS_DATA = [
   {id:'REP-001',loc:'Main Campus - Wing A',date:'2024-05-15',nets:12,signal:'-52 dBm',sigColor:'#22c55e',networks:[{name:'CAF-WIFI-5G',sig:-45},{name:'CAF-WIFI-2G',sig:-67},{name:'CAF-GUEST',sig:-79}]},
   {id:'REP-002',loc:'Basement Storage',date:'2024-05-18',nets:8,signal:'-68 dBm',sigColor:'#f59e0b',networks:[{name:'VTEL-Fiber',sig:-85},{name:'Mamon2_5G',sig:-86}]},
   {id:'REP-003',loc:'Executive Suite',date:'2024-05-20',nets:15,signal:'-45 dBm',sigColor:'#22c55e',networks:[{name:'CAF-WIFI-5G',sig:-45},{name:'CAF-GUEST',sig:-65}]},
@@ -74,23 +108,16 @@ const INIT_MEMBERS = [
 ];
 
 // ── NAV ITEMS ─────────────────────────────────────────────────────────────────
-const NAV = [
-  {id:'access-points',  label:'ACCESS POINTS',  emoji:'📡'},
-  {id:'channel-rating', label:'CHANNEL RATING', emoji:'⭐'},
-  {id:'channel-graph',  label:'CHANNEL GRAPH',  emoji:'📊'},
-  {id:'time-graph',     label:'TIME GRAPH',     emoji:'📈'},
-  {id:'export',         label:'EXPORT',         emoji:'📄'},
-  {id:'vendors',        label:'VENDORS',        emoji:'👥'},
-  {id:'settings',       label:'SETTINGS',       emoji:'⚙️'},
-  {id:'about',          label:'ABOUT',          emoji:'ℹ️'},
+const NAV_ITEMS_LIST = [
+  {id:'access-points',  label:'ACCESS POINTS',  icon: Radio },
+  {id:'channel-rating', label:'CHANNEL RATING', icon: Signal },
+  {id:'channel-graph',  label:'CHANNEL GRAPH',  icon: LayoutDashboard },
+  {id:'time-graph',     label:'TIME GRAPH',     icon: LineChartIcon },
+  {id:'export',         label:'EXPORT',         icon: FileUp },
+  {id:'vendors',        label:'VENDORS',        icon: Users },
+  {id:'settings',       label:'SETTINGS',       icon: Settings },
+  {id:'about',          label:'ABOUT',          icon: Info },
 ];
-
-// ── ICONS (SVG inline) ────────────────────────────────────────────────────────
-const Icon = ({ path, size=14, color='currentColor' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d={path} />
-  </svg>
-);
 
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
 export default function App() {
@@ -108,11 +135,11 @@ export default function App() {
   const [auditDone, setAuditDone]   = useState(false);
   
   // Geiger Tracker State
-  const [locating, setLocating]     = useState<string | null>(null);
+  const [locating, setLocating]     = useState(null);
   const [currentSignal, setCurrentSignal] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioContextRef = useRef(null);
+  const intervalRef = useRef(null);
 
   // Channel Rating
   const [ratingBand, setRatingBand] = useState('2.4 GHz');
@@ -121,10 +148,10 @@ export default function App() {
   const [graphBand, setGraphBand]   = useState('2.4');
   // Speed Test
   const [speedRunning, setSpeedRunning] = useState(false);
-  const [speedResult, setSpeedResult]   = useState<{dl:number, ul:number, ping:number} | null>(null);
+  const [speedResult, setSpeedResult]   = useState(null);
   const [speedProgress, setSpeedProgress] = useState(0);
   // Export
-  const [selectedReport, setSelectedReport] = useState<any>(null);
+  const [selectedReport, setSelectedReport] = useState(null);
   const [reportSearch, setReportSearch]     = useState('');
   // Vendors
   const [members, setMembers]       = useState(INIT_MEMBERS);
@@ -133,14 +160,14 @@ export default function App() {
   const [inviteRole, setInviteRole] = useState('Junior Tech');
   const [inviteName, setInviteName] = useState('');
   // Settings
-  const [accordion, setAccordion]   = useState<Record<number, boolean>>({});
+  const [accordion, setAccordion]   = useState({});
   const [notifs, setNotifs]         = useState(true);
   // Notifications
-  const [toasts, setToasts]         = useState<any[]>([]);
+  const [toasts, setToasts]         = useState([]);
 
   const T = dark ? DARK : LIGHT;
 
-  const toast = (msg: string, type: string = 'info') => {
+  const toast = (msg, type = 'info') => {
     const id = Date.now();
     setToasts(t=>[...t,{id,msg,type}]);
     setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)),3500);
@@ -190,7 +217,7 @@ export default function App() {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [locating, currentSignal, isMuted]);
 
-  const doLogin = (e: React.FormEvent) => {
+  const doLogin = (e) => {
     e.preventDefault();
     if(loginUser==='admin' && loginPass==='admin123') { setLoggedIn(true); setLoginErr(''); }
     else setLoginErr('Invalid credentials. Use admin / admin123');
@@ -207,7 +234,7 @@ export default function App() {
     toast(`✅ Audit complete for "${auditEnv}"! Found ${APS_DATA.length} networks.`,'success');
   };
 
-  const locateAP = (ssid: string) => {
+  const locateAP = (ssid) => {
     setLocating(ssid);
     toast(`📍 AP Signal Tracker active for "${ssid}"`,'info');
   };
@@ -224,7 +251,7 @@ export default function App() {
     toast(`⚡ Speed test complete! ${result.dl} Mbps download`,'success');
   };
 
-  const inviteMember = (e: React.FormEvent) => {
+  const inviteMember = (e) => {
     e.preventDefault();
     if(!inviteEmail||!inviteName){ toast('Please fill all fields','error'); return; }
     const newMember = { id:Date.now(), name:inviteName, role:inviteRole, status:'Active', scans:0, perf:0, avatar:'👤', email:inviteEmail };
@@ -233,31 +260,18 @@ export default function App() {
     toast(`✅ Invitation sent to ${inviteEmail}`,'success');
   };
 
-  const removeMember = (id: number, name: string) => {
+  const removeMember = (id, name) => {
     setMembers(m=>m.filter(x=>x.id!==id));
     toast(`🗑️ ${name} removed from team`,'info');
   };
 
-  const exportReport = (format: string, reportId: string) => {
+  const exportReport = (format, reportId) => {
     toast(`📥 Exporting ${reportId} as ${format}...`,'info');
     setTimeout(()=>toast(`✅ ${reportId}.${format.toLowerCase()} downloaded!`,'success'),1500);
   };
 
-  const sigColor = (dbm: number) => dbm>=-60?T.green:dbm>=-75?T.yellow:T.red;
-  const filteredReports = REPORTS.filter(r=>r.loc.toLowerCase().includes(reportSearch.toLowerCase())||r.id.toLowerCase().includes(reportSearch.toLowerCase()));
-
-  // ── CHARTS DATA ─────────────────────────────────────────────────────────
-  const performanceData = useMemo(() => APS_DATA.map(n => ({
-    name: n.ssid,
-    signal: Math.abs(n.signal),
-    bandwidth: n.bw,
-    interference: Math.floor(Math.random() * 40) + 10,
-  })), []);
-
-  const signalData = useMemo(() => APS_DATA.map(n => ({
-    network: n.ssid,
-    strength: Math.abs(n.signal)
-  })), []);
+  const sigColor = (dbm) => dbm>=-60?T.green:dbm>=-75?T.yellow:T.red;
+  const filteredReports = REPORTS_DATA.filter(r=>r.loc.toLowerCase().includes(reportSearch.toLowerCase())||r.id.toLowerCase().includes(reportSearch.toLowerCase()));
 
   // ── STYLES (theme-aware) ─────────────────────────────────────────────────
   const s = {
@@ -267,29 +281,29 @@ export default function App() {
     topbar: { background:T.sidebar, borderBottom:`1px solid ${T.border}`, padding:'12px 24px', display:'flex', justifyContent:'space-between', alignItems:'center', position:'sticky', top:0, zIndex:10 },
     content: { padding:'24px', flex:1 },
     logoWrap: { display:'flex', alignItems:'center', gap:'10px', marginBottom:'28px', padding:'0 4px' },
-    navBtn: (a: boolean) => ({ display:'flex', alignItems:'center', gap:'9px', padding:'9px 12px', borderRadius:'8px', cursor:'pointer', border:'none', textAlign:'left', width:'100%', background: a?'linear-gradient(135deg,#1e40af,#2563eb)':'transparent', color: a?'#fff':T.muted, fontSize:'11px', fontWeight:'700', letterSpacing:'0.06em', transition:'all 0.15s', marginBottom:'2px' }),
+    navBtn: (a) => ({ display:'flex', alignItems:'center', gap:'9px', padding:'9px 12px', borderRadius:'8px', cursor:'pointer', border:'none', textAlign:'left', width:'100%', background: a?'linear-gradient(135deg,#1e40af,#2563eb)':'transparent', color: a?'#fff':T.muted, fontSize:'11px', fontWeight:'700', letterSpacing:'0.06em', transition:'all 0.15s', marginBottom:'2px' }),
     card: { background:T.card, border:`1px solid ${T.border}`, borderRadius:'12px', padding:'20px', marginBottom:'16px' },
     card2: { background:T.card2, border:`1px solid ${T.border}`, borderRadius:'10px', padding:'14px' },
     row: { background:T.card2, border:`1px solid ${T.border}`, borderRadius:'10px', padding:'14px 16px', marginBottom:'10px', display:'flex', alignItems:'center', gap:'14px' },
     input: { background:T.card2, border:`1px solid ${T.border}`, color:T.text, padding:'10px 14px', borderRadius:'8px', fontSize:'13px', outline:'none', width:'100%', boxSizing:'border-box' },
     select: { background:T.card2, border:`1px solid ${T.border}`, color:T.text, padding:'10px 14px', borderRadius:'8px', fontSize:'13px', outline:'none', width:'100%', cursor:'pointer' },
-    btn: (bg?: string, tc?: string) => ({ background:bg||T.blue, color:tc||'#fff', border:'none', padding:'9px 18px', borderRadius:'8px', cursor:'pointer', fontSize:'12px', fontWeight:'700', display:'inline-flex', alignItems:'center', gap:'6px', transition:'opacity 0.2s' }),
+    btn: (bg, tc) => ({ background:bg||T.blue, color:tc||'#fff', border:'none', padding:'9px 18px', borderRadius:'8px', cursor:'pointer', fontSize:'12px', fontWeight:'700', display:'inline-flex', alignItems:'center', gap:'6px', transition:'opacity 0.2s' }),
     btnGhost: { background:'transparent', border:`1px solid ${T.border}`, color:T.dim, padding:'8px 14px', borderRadius:'8px', cursor:'pointer', fontSize:'12px', fontWeight:'700', display:'inline-flex', alignItems:'center', gap:'6px' },
-    table: { width:'100%', borderCollapse:'collapse' as const },
-    th: { textAlign:'left' as const, padding:'10px 14px', borderBottom:`1px solid ${T.border}`, color:T.muted, fontSize:'10px', letterSpacing:'0.08em', textTransform:'uppercase' as const },
+    table: { width:'100%', borderCollapse:'collapse' },
+    th: { textAlign:'left', padding:'10px 14px', borderBottom:`1px solid ${T.border}`, color:T.muted, fontSize:'10px', letterSpacing:'0.08em', textTransform:'uppercase' },
     td: { padding:'12px 14px', borderBottom:`1px solid ${T.border}`, fontSize:'13px' },
-    badge: (bg: string, tc: string) => ({ background:bg, color:tc, fontSize:'10px', fontWeight:'700', padding:'2px 9px', borderRadius:'20px', display:'inline-block' }),
-    label: { fontSize:'10px', color:T.muted, letterSpacing:'0.08em', textTransform:'uppercase' as const, display:'block', marginBottom:'4px' },
+    badge: (bg, tc) => ({ background:bg, color:tc, fontSize:'10px', fontWeight:'700', padding:'2px 9px', borderRadius:'20px', display:'inline-block' }),
+    label: { fontSize:'10px', color:T.muted, letterSpacing:'0.08em', textTransform:'uppercase', display:'block', marginBottom:'4px' },
     statCard: { background:T.card, border:`1px solid ${T.border}`, borderRadius:'12px', padding:'18px', display:'flex', justifyContent:'space-between', alignItems:'flex-start' },
-    footer: { background:T.sidebar, borderTop:`1px solid ${T.border}`, padding:'8px 24px', display:'flex', justifyContent:'space-between', fontSize:'10px', color:T.border, letterSpacing:'0.06em', flexWrap:'wrap' as const, gap:'4px' },
-    overlay: { position:'fixed' as const, inset:0, background:'rgba(0,0,0,0.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:100, padding:'16px' },
+    footer: { background:T.sidebar, borderTop:`1px solid ${T.border}`, padding:'8px 24px', display:'flex', justifyContent:'space-between', fontSize:'10px', color:T.border, letterSpacing:'0.06em', flexWrap:'wrap', gap:'4px' },
+    overlay: { position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:100, padding:'16px' },
     modal: { background:T.card, border:`1px solid ${T.border}`, borderRadius:'14px', padding:'28px', maxWidth:'460px', width:'100%' },
     progressTrack: { background:T.border, borderRadius:'4px', height:'6px', overflow:'hidden', marginTop:'8px' },
-    progressFill: (pct: number, color?: string) => ({ width:`${pct}%`, height:'100%', background:color||T.blue, borderRadius:'4px', transition:'width 0.2s' }),
+    progressFill: (pct, color) => ({ width:`${pct}%`, height:'100%', background:color||T.blue, borderRadius:'4px', transition:'width 0.2s' }),
     accordion: { borderBottom:`1px solid ${T.border}` },
-    accBtn: { width:'100%', background:'transparent', border:'none', color:T.text, padding:'15px 0', display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer', fontSize:'14px', fontWeight:'600', textAlign:'left' as const },
-    toggle: (on: boolean) => ({ width:'44px', height:'24px', borderRadius:'12px', background:on?T.blue:T.border, cursor:'pointer', border:'none', position:'relative' as const, transition:'background 0.2s', flexShrink:0 }),
-    toggleDot: (on: boolean) => ({ position:'absolute' as const, top:'3px', left:on?'23px':'3px', width:'18px', height:'18px', borderRadius:'50%', background:'#fff', transition:'left 0.2s' }),
+    accBtn: { width:'100%', background:'transparent', border:'none', color:T.text, padding:'15px 0', display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer', fontSize:'14px', fontWeight:'600', textAlign:'left' },
+    toggle: (on) => ({ width:'44px', height:'24px', borderRadius:'12px', background:on?T.blue:T.border, cursor:'pointer', border:'none', position:'relative', transition:'background 0.2s', flexShrink:0 }),
+    toggleDot: (on) => ({ position:'absolute', top:'3px', left:on?'23px':'3px', width:'18px', height:'18px', borderRadius:'50%', background:'#fff', transition:'left 0.2s' }),
   };
 
   // ── LOGIN ─────────────────────────────────────────────────────────────────
@@ -376,9 +390,9 @@ export default function App() {
           <span style={{fontSize:'14px',fontWeight:'700',color:T.text}}>NetPulse CAF</span>
         </div>
         <nav style={{flex:1}}>
-          {NAV.map(n=>(
+          {NAV_ITEMS_LIST.map(n=>(
             <button key={n.id} style={s.navBtn(tab===n.id)} onClick={()=>setTab(n.id)}>
-              <span style={{fontSize:'13px'}}>{n.emoji}</span>
+              <n.icon style={{width: 14, height: 14, marginRight: 8}} />
               {n.label}
             </button>
           ))}
@@ -393,7 +407,7 @@ export default function App() {
         {/* TOPBAR */}
         <div style={s.topbar}>
           <span style={{fontSize:'12px',fontWeight:'700',letterSpacing:'0.1em',color:T.muted}}>
-            {NAV.find(n=>n.id===tab)?.label}
+            {NAV_ITEMS_LIST.find(n=>n.id===tab)?.label}
           </span>
           <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
             <div style={{background:dark?'#1e3a5f':'#eff6ff',border:`1px solid ${T.blue}`,color:T.blue,fontSize:'10px',fontWeight:'700',padding:'4px 10px',borderRadius:'20px',display:'flex',alignItems:'center',gap:'6px'}}>
@@ -538,7 +552,7 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(CHANNEL_RATINGS[ratingBand as keyof typeof CHANNEL_RATINGS]||[]).map((r,i)=>(
+                    {(CHANNEL_RATINGS[ratingBand]||[]).map((r,i)=>(
                       <tr key={i}>
                         <td style={s.td}><span style={{color:T.yellow,letterSpacing:'2px'}}>{'★'.repeat(r.stars)}{'☆'.repeat(10-r.stars)}</span></td>
                         <td style={{...s.td,color:T.cyan,fontWeight:'700'}}>{r.ch} <span style={{color:T.muted,fontSize:'11px'}}>20 MHz</span></td>
@@ -813,7 +827,7 @@ export default function App() {
                       ))}
                     </div>
                     <div style={{fontSize:'12px',fontWeight:'700',color:T.muted,marginBottom:'10px'}}>NETWORKS FOUND</div>
-                    {selectedReport.networks.map((n:any,i:number)=>(
+                    {selectedReport.networks.map((n,i)=>(
                       <div key={i} style={s.row}>
                         <div style={{width:'8px',height:'8px',borderRadius:'50%',background:sigColor(n.sig),flexShrink:0}} />
                         <span style={{fontWeight:'600'}}>{n.name}</span>
@@ -933,7 +947,7 @@ export default function App() {
                           </div>
                         </td>
                         <td style={s.td}>
-                          <button style={{background:'transparent',border:'none',color:T.red,cursor:'pointer',fontSize:'12px',fontWeight:'700'}} onClick={()=>removeMember(m.id,m.name)}>Remove</button>
+                          <button style={{background:'transparent',border:'none',color:T.red,cursor:'pointer',fontSize:'12px',fontWeight:'700'}} onClick={()=>removeMember(m.id, m.name)}>Remove</button>
                         </td>
                       </tr>
                     ))}
@@ -1041,9 +1055,9 @@ export default function App() {
               </div>
 
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px',marginBottom:'14px'}}>
-                {[{i:'🛡️',l:'Secure Analysis',t:'Designed specifically for high-security environments, NetPulse provides real-time spectral analysis of CAF-WIFI networks without compromising endpoint security.'},{i:'📡',l:'Aruba Optimized',t:'Deep integration with Aruba Access Point hardware enables specialized features like hidden AP tracking and automated channel optimization.'}].map((x,i)=>(
+                {[{i: ShieldCheck,l:'Secure Analysis',t:'Designed specifically for high-security environments, NetPulse provides real-time spectral analysis of CAF-WIFI networks without compromising endpoint security.'},{i: Radio,l:'Aruba Optimized',t:'Deep integration with Aruba Access Point hardware enables specialized features like hidden AP tracking and automated channel optimization.'}].map((x,i)=>(
                   <div key={i} style={{...s.card,textAlign:'left',marginBottom:0}}>
-                    <div style={{fontSize:'24px',marginBottom:'10px'}}>{x.i}</div>
+                    <x.i style={{width: 24, height: 24, marginBottom: 10, color: T.blue}} />
                     <div style={{fontWeight:'700',fontSize:'15px',marginBottom:'8px'}}>{x.l}</div>
                     <div style={{fontSize:'13px',color:T.muted,lineHeight:'1.6'}}>{x.t}</div>
                   </div>
