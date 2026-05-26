@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, 
   PieChart, Pie, Cell, AreaChart, Area, LineChart, Line 
 } from 'recharts';
 import { 
@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 // Mock Data
 import { MOCK_NETWORKS, WEEKLY_ACTIVITY, SPEED_HISTORY, TEAM_MEMBERS, REPORTS, type NetworkScan } from "@/lib/mock-data";
 
-// Sub-components (Simplified versions for stability)
+// Sub-components
 import { ScannerTab } from "@/components/scanner/scanner-tab";
 import { ChannelRatingTab } from "@/components/dashboard/channel-rating-tab";
 import { DashboardTab } from "@/components/dashboard/dashboard-tab";
@@ -56,6 +56,7 @@ export default function CAFWiFiAnalyzer() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    toast({ title: "Logged Out", description: "Secure session terminated." });
   };
 
   if (!isMounted) return null;
