@@ -2,16 +2,15 @@
 import { useState, useCallback } from 'react';
 
 /**
- * useWifiScan — works in Electron (native) and browser (API fetch)
+ * useWifiScan — real scan in Electron, API fallback in browser
  */
 export function useWifiScan() {
   const [networks, setNetworks] = useState([]);
   const [scanning, setScanning] = useState(false);
-  const [error, setError] = useState(null);
+  const [error,    setError]    = useState(null);
 
   const scan = useCallback(async () => {
-    setScanning(true);
-    setError(null);
+    setScanning(true); setError(null);
     try {
       let result;
       if (typeof window !== 'undefined' && window.electronAPI?.isElectron) {
@@ -22,8 +21,8 @@ export function useWifiScan() {
         result = await res.json();
       }
       if (result.error) { setError(result.error); setNetworks([]); }
-      else { setNetworks(result.networks || []); }
-    } catch (err) {
+      else              { setNetworks(result.networks || []); }
+    } catch(err) {
       setError(err.message); setNetworks([]);
     } finally {
       setScanning(false);
