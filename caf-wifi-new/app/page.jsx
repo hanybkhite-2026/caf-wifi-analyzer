@@ -276,6 +276,9 @@ export default function App(){
   const [scanMethod,setScanMethod]=useState('');
   const [scanIface,setScanIface]=useState('');
   const [scanErr,setScanErr]=useState(null);
+  const [scanMode,setScanMode]=useState('demo'); // 'live'|'demo'
+  const [showAgentModal,setShowAgentModal]=useState(false);
+  const [agentUrl,setAgentUrl]=useState('');
   const [selAP,setSelAP]=useState(null);
   const [showFilter,setShowFilter]=useState(false);
   const [fSSID,setFSSID]=useState('');
@@ -324,16 +327,52 @@ export default function App(){
   const toast=(msg,type='info')=>{const id=Date.now();setToasts(p=>[...p,{id,msg,type}]);setTimeout(()=>setToasts(p=>p.filter(x=>x.id!==id)),3500);};
 
   // ── Scan via API ──────────────────────────────────────────────────────────
+  // ── Demo data shown when real WiFi scan is unavailable ──────────────────
+  const DEMO_APS=[
+    {ssid:'CAF-WIFI-5G',  mac:'00:0B:86:12:34:56',signal:-42,primaryCh:36, centerCh:38, freq:5180,bw:40, security:['WPA2','WPA3'],band:'5',  connected:true},
+    {ssid:'CAF-WIFI-2G',  mac:'00:0B:86:78:90:AB',signal:-65,primaryCh:6,  centerCh:null,freq:2437,bw:20, security:['WPS','WPA','WPA2'],band:'2.4'},
+    {ssid:'CAF-GUEST',    mac:'00:0B:86:CD:EF:01',signal:-74,primaryCh:52, centerCh:48, freq:5260,bw:80, security:['WPA2'],band:'5'},
+    {ssid:'VTEL-Fiber',   mac:'7c:1c:f1:25:19:2c',signal:-81,primaryCh:1,  centerCh:null,freq:2412,bw:20, security:['WPA','WPA2'],band:'2.4'},
+    {ssid:'Mamon2_5G',    mac:'98:da:c4:26:21:87',signal:-83,primaryCh:36, centerCh:42, freq:5180,bw:80, security:['WPS','WPA','WPA2'],band:'5'},
+    {ssid:'*hidden*',     mac:'9e:da:c4:26:21:87',signal:-88,primaryCh:6,  centerCh:null,freq:2437,bw:20, security:['WPA2'],band:'2.4'},
+    {ssid:'Neighbor-2.4', mac:'4c:5e:0c:11:22:33',signal:-79,primaryCh:11, centerCh:null,freq:2462,bw:20, security:['WPA2'],band:'2.4'},
+    {ssid:'IoT-Network',  mac:'d4:ae:52:aa:bb:cc',signal:-86,primaryCh:1,  centerCh:null,freq:2412,bw:20, security:['WPA2'],band:'2.4'},
+  ];
+
+  const loadDemoData=useCallback(()=>{
+    const enriched=DEMO_APS.map((n,i)=>enrichAP({
+      ...n,
+      // Add slight random variation to signals to look live
+      signal:n.signal+Math.round(Math.random()*4-2),
+    },i));
+    setAps(prev=>{
+      const withColors=enriched.map((n,i)=>({...n,color:prev.find(p=>p.mac===n.mac)?.color||n.color}));
+      setHists(h=>{
+        const updated=[...h];
+        for(const ap of withColors){
+          const ex=updated.find(x=>x.mac===ap.mac);
+          if(ex){ex.pts=[...ex.pts.slice(-49),Math.round(ap.signal)];}
+          else updated.push({ssid:ap.ssid,mac:ap.mac,color:ap.color,pts:[Math.round(ap.signal)]});
+        }
+        return updated;
+      });
+      return withColors;
+    });
+    setScanN(n=>n+1);
+  },[]);
+
   const doScan=useCallback(async(showBoot=false)=>{
     if(showBoot){
-      const steps=['Initializing...','Detecting interfaces...','Scanning 2.4 GHz...','Scanning 5 GHz...','Scanning 6 GHz...','OUI lookup...','Channel analysis...','Distance calc...','Done!'];
-      for(let i=0;i<steps.length;i++){await new Promise(r=>setTimeout(r,280));setBootPct(Math.round((i+1)/steps.length*100));setBootStatus(steps[i]);}
+      const steps=['Initializing...','Detecting interfaces...','Scanning 2.4 GHz...','Scanning 5 GHz...','OUI lookup...','Channel analysis...','Done!'];
+      for(let i=0;i<steps.length;i++){await new Promise(r=>setTimeout(r,260));setBootPct(Math.round((i+1)/steps.length*100));setBootStatus(steps[i]);}
     }
+    // Try local agent URL first (user can set it)
+    const agentUrl=typeof window!=='undefined'?localStorage.getItem('caf_agent_url')||'/api/scan':'/api/scan';
     try{
-      const res=await fetch('/api/scan');
+      const res=await fetch(agentUrl,{signal:AbortSignal.timeout(8000)});
       const data=await res.json();
       if(data.networks&&data.networks.length>0){
-        setScanErr(null);
+        setScanErr(null);setScanMode('live');
         const enriched=data.networks.map((n,i)=>enrichAP(n,i));
         setAps(prev=>{
           const withColors=enriched.map((n,i)=>({...n,color:prev.find(p=>p.mac===n.mac)?.color||n.color}));
@@ -348,27 +387,32 @@ export default function App(){
           });
           return withColors;
         });
-        setScanMethod(data.method||'');
-        setScanIface(data.iface||'');
-        setScanN(n=>n+1);
+        setScanMethod(data.method||'');setScanIface(data.iface||'');setScanN(n=>n+1);
         if(showBoot)toast(`✅ ${data.count} networks found`,'success');
-      } else if(data.error){
-        setScanErr(data.error);
-        if(showBoot)toast('⚠️ '+data.error,'error');
+      } else {
+        // No real networks → use demo data
+        setScanMode('demo');setScanErr(null);
+        loadDemoData();
+        if(showBoot)toast('📡 Demo mode — showing sample networks','info');
       }
     }catch(e){
-      setScanErr('Scan failed: '+e.message);
-      if(showBoot)toast('⚠️ Scan error','error');
+      // Fetch failed → use demo data
+      setScanMode('demo');setScanErr(null);
+      loadDemoData();
+      if(showBoot)toast('📡 Demo mode — showing sample networks','info');
     }
     if(showBoot)setBooting(false);
-  },[]);
+  },[loadDemoData]);
 
   useEffect(()=>{doScan(true);},[]);
   useEffect(()=>{
     if(booting||paused)return;
-    const t=setInterval(()=>doScan(false),scanSpeed*1000);
+    const t=setInterval(()=>{
+      if(scanMode==='demo')loadDemoData(); // fluctuate demo signals
+      else doScan(false);
+    },scanSpeed*1000);
     return()=>clearInterval(t);
-  },[booting,paused,scanSpeed,doScan]);
+  },[booting,paused,scanSpeed,doScan,scanMode,loadDemoData]);
 
   // ── Speed test ────────────────────────────────────────────────────────────
   const runSpeed=async()=>{
@@ -527,13 +571,20 @@ export default function App(){
         {/* ═════ ACCESS POINTS ═════ */}
         {tab==='ap'&&(
           <div>
-            {scanErr&&(
-              <div style={{background:T.card,padding:'12px 14px',borderBottom:`1px solid ${T.border}`,fontSize:'12px',color:T.yellow}}>
-                <div style={{fontWeight:'700',marginBottom:'3px'}}>⚠️ Scan Notice</div>
-                <div style={{color:T.sub}}>{scanErr}</div>
-                <div style={{marginTop:'5px',color:T.sub,fontSize:'11px'}}>Real WiFi scanning requires running on a Linux server with WiFi hardware. Run <code style={{background:T.card2,padding:'1px 5px',borderRadius:'2px'}}>npm run dev</code> locally for real scans.</div>
+            {/* Demo/Live mode banner */}
+            <div style={{background:scanMode==='live'?T.green+'15':dark?'#1a1a2e':'#f0f4ff',borderBottom:`1px solid ${scanMode==='live'?T.green:T.cyan}33`,padding:'8px 14px',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'6px'}}>
+              <div>
+                <span style={{fontWeight:'700',fontSize:'12px',color:scanMode==='live'?T.green:T.cyan}}>
+                  {scanMode==='live'?'🔴 Live Scan':'📡 Demo Mode'}
+                </span>
+                <span style={{fontSize:'11px',color:T.sub,marginLeft:'8px'}}>
+                  {scanMode==='live'?`Real WiFi via ${scanMethod||'system'}`:'Showing sample data — connect local agent for real scan'}
+                </span>
               </div>
-            )}
+              <button onClick={()=>setShowAgentModal(true)} style={{background:'transparent',border:`1px solid ${T.cyan}`,color:T.cyan,padding:'3px 10px',borderRadius:'4px',cursor:'pointer',fontSize:'11px',fontWeight:'600',whiteSpace:'nowrap'}}>
+                🔗 Connect Agent
+              </button>
+            </div>
             {aps.length>0&&(
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'5px 14px',background:T.card,borderBottom:`1px solid ${T.border}`}}>
                 <div style={{display:'flex',gap:'4px',alignItems:'center'}}>
@@ -1056,6 +1107,48 @@ export default function App(){
           </div>
         )}
       </div>
+
+      {/* AGENT CONNECTION MODAL */}
+      {showAgentModal&&(
+        <div style={s.overlay} onClick={e=>{if(e.target===e.currentTarget)setShowAgentModal(false);}}>
+          <div style={s.sheet}>
+            <div style={{fontWeight:'700',fontSize:'16px',color:T.text,marginBottom:'6px'}}>🔗 Connect Local Agent</div>
+            <div style={{fontSize:'12px',color:T.sub,marginBottom:'16px',lineHeight:'1.6'}}>
+              For real WiFi scanning, run the app on your local network and enter its address.<br/>
+              <strong style={{color:T.cyan}}>On Android/iPhone:</strong> connect to the same WiFi as your laptop, then enter your laptop's IP.
+            </div>
+            <div style={{background:T.card2,borderRadius:'6px',padding:'12px',marginBottom:'14px',fontSize:'12px',fontFamily:'monospace',color:T.green,lineHeight:'1.8'}}>
+              <div style={{color:T.sub,fontFamily:'sans-serif',fontSize:'11px',marginBottom:'4px'}}>Run on your laptop:</div>
+              cd ~/studio/caf-wifi-new && npm run dev<br/>
+              <div style={{color:T.sub,fontFamily:'sans-serif',fontSize:'11px',margin:'6px 0 2px'}}>Find your laptop IP:</div>
+              ip addr | grep 192.168<br/>
+              <div style={{color:T.sub,fontFamily:'sans-serif',fontSize:'11px',margin:'6px 0 2px'}}>Then enter below:</div>
+              http://192.168.x.x:3000/api/scan
+            </div>
+            <div style={{marginBottom:'12px'}}>
+              <label style={{fontSize:'11px',color:T.sub,display:'block',marginBottom:'4px'}}>AGENT URL</label>
+              <input style={s.input} placeholder="http://192.168.1.100:3000/api/scan"
+                value={agentUrl} onChange={e=>setAgentUrl(e.target.value)}/>
+            </div>
+            <div style={{display:'flex',gap:'8px'}}>
+              <button style={{...s.btn(T.cyan),flex:1,justifyContent:'center'}} onClick={()=>{
+                if(!agentUrl.trim()){toast('Enter agent URL','error');return;}
+                localStorage.setItem('caf_agent_url',agentUrl.trim());
+                setShowAgentModal(false);
+                doScan(false);
+                toast('✅ Agent URL saved — scanning...','success');
+              }}>Connect & Scan</button>
+              <button style={{...s.btn(T.card2,T.text),border:`1px solid ${T.border}`,flex:1,justifyContent:'center'}} onClick={()=>{
+                localStorage.removeItem('caf_agent_url');
+                setScanMode('demo');loadDemoData();
+                setShowAgentModal(false);
+                toast('Demo mode restored','info');
+              }}>Use Demo Mode</button>
+            </div>
+            <button style={{width:'100%',background:'transparent',border:'none',color:T.sub,cursor:'pointer',padding:'10px',fontSize:'12px',marginTop:'4px'}} onClick={()=>setShowAgentModal(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
 
       {/* BOTTOM NAV */}
       <div style={s.bnav}>
