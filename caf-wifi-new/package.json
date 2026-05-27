@@ -1,9 +1,12 @@
 {
   "name": "caf-wifi-new",
-  "version": "0.1.0",
+  "version": "3.5.0",
   "private": true,
-  "description": "CAF-WiFi Analyzer — desktop WiFi scanner",
-  "author": "CAF-WiFi",
+  "description": "CAF-WiFi Enterprise Analyzer — desktop WiFi scanner",
+  "author": {
+    "name": "Hany Bkhite",
+    "email": "hanybkhite@gmail.com"
+  },
   "main": "electron/main.js",
   "scripts": {
     "dev": "next dev",
@@ -17,9 +20,9 @@
     "dist:linux": "next build && electron-builder --linux"
   },
   "dependencies": {
-    "next": "^15.0.0",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "next": "^16.2.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "concurrently": "^9.0.0",
@@ -30,9 +33,7 @@
   "build": {
     "appId": "com.caf.wifi-analyzer",
     "productName": "CAF-WiFi Analyzer",
-    "directories": {
-      "output": "dist"
-    },
+    "directories": { "output": "dist" },
     "files": [
       "electron/**/*",
       "app/**/*",
@@ -41,19 +42,6 @@
       "next.config.js",
       "package.json",
       "node_modules/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": ".",
-        "to": "app",
-        "filter": [
-          "app/**/*",
-          ".next/**/*",
-          "public/**/*",
-          "next.config.js",
-          "package.json"
-        ]
-      }
     ],
     "win": {
       "target": [{ "target": "nsis", "arch": ["x64"] }],
@@ -67,10 +55,11 @@
     "linux": {
       "target": [
         { "target": "AppImage", "arch": ["x64"] },
-        { "target": "deb",      "arch": ["x64"] }
+        { "target": "deb", "arch": ["x64"] }
       ],
       "icon": "public/icon.png",
-      "category": "Network"
+      "category": "Network",
+      "maintainer": "Hany Bkhite <hanybkhite@gmail.com>"
     },
     "nsis": {
       "oneClick": false,
