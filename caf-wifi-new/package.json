@@ -2,27 +2,81 @@
   "name": "caf-wifi-new",
   "version": "0.1.0",
   "private": true,
+  "description": "CAF-WiFi Analyzer — desktop WiFi scanner",
+  "author": "CAF-WiFi",
+  "main": "electron/main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "electron:dev": "concurrently \"next dev -p 3579\" \"wait-on http://127.0.0.1:3579 && electron .\"",
+    "electron:build": "next build && electron-builder",
+    "dist": "npm run electron:build",
+    "dist:win": "next build && electron-builder --win",
+    "dist:mac": "next build && electron-builder --mac",
+    "dist:linux": "next build && electron-builder --linux"
   },
   "dependencies": {
-    "lucide-react": "^1.16.0",
-    "next": "16.2.6",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "recharts": "^3.8.1"
+    "next": "^15.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.6",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "concurrently": "^9.0.0",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0",
+    "wait-on": "^8.0.0"
+  },
+  "build": {
+    "appId": "com.caf.wifi-analyzer",
+    "productName": "CAF-WiFi Analyzer",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "app/**/*",
+      ".next/**/*",
+      "public/**/*",
+      "next.config.js",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": ".",
+        "to": "app",
+        "filter": [
+          "app/**/*",
+          ".next/**/*",
+          "public/**/*",
+          "next.config.js",
+          "package.json"
+        ]
+      }
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "public/icon.ico"
+    },
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
+      "icon": "public/icon.icns",
+      "category": "public.app-category.utilities"
+    },
+    "linux": {
+      "target": [
+        { "target": "AppImage", "arch": ["x64"] },
+        { "target": "deb",      "arch": ["x64"] }
+      ],
+      "icon": "public/icon.png",
+      "category": "Network"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   }
 }
