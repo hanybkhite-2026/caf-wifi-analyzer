@@ -17,7 +17,11 @@
     "dist": "npm run electron:build",
     "dist:win": "next build && electron-builder --win",
     "dist:mac": "next build && electron-builder --mac",
-    "dist:linux": "next build && electron-builder --linux"
+    "dist:linux": "next build && electron-builder --linux",
+    "build:mobile": "BUILD_TARGET=mobile next build",
+    "android:sync": "npm run build:mobile && npx cap sync android",
+    "android:open": "npx cap open android",
+    "android:run": "npm run android:sync && npx cap run android"
   },
   "dependencies": {
     "next": "^16.2.6",
@@ -33,22 +37,54 @@
   "build": {
     "appId": "com.caf.wifi-analyzer",
     "productName": "CAF-WiFi Analyzer",
-    "directories": { "output": "dist" },
+    "directories": {
+      "output": "dist"
+    },
     "files": [
-      "electron/**/*", "app/**/*", ".next/**/*",
-      "public/**/*", "next.config.js", "package.json", "node_modules/**/*"
+      "electron/**/*",
+      "app/**/*",
+      ".next/**/*",
+      "public/**/*",
+      "next.config.js",
+      "package.json",
+      "node_modules/**/*"
     ],
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }]
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
     },
     "mac": {
-      "target": [{ "target": "dmg", "arch": ["x64","arm64"] }],
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
       "category": "public.app-category.utilities"
     },
     "linux": {
       "target": [
-        { "target": "AppImage", "arch": ["x64"] },
-        { "target": "deb", "arch": ["x64"] }
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "category": "Network",
       "maintainer": "Hany Bkhite <hanybkhite@gmail.com>"
