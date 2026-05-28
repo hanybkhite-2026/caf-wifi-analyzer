@@ -3,106 +3,144 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>CAF-WIFI — Download</title>
+<title>CAF-WIFI — Get the App</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#0d1117;color:#e6edf3;font-family:'Segoe UI',system-ui,sans-serif;padding:20px;min-height:100vh}
-.container{max-width:580px;margin:0 auto}
+.wrap{max-width:560px;margin:0 auto}
 h1{color:#00bcd4;font-size:22px;margin-bottom:4px}
 .sub{color:#7d8590;font-size:13px;margin-bottom:24px}
 .card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:18px;margin-bottom:14px}
-.card-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-.icon{font-size:28px}
-.card-title{font-size:15px;font-weight:700;color:#e6edf3}
-.card-sub{font-size:12px;color:#7d8590;margin-top:2px}
-.btn{display:inline-flex;align-items:center;gap:6px;background:#00bcd4;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:700;margin-top:10px}
-.btn-outline{background:transparent;border:1px solid #30363d;color:#8b949e}
-.btn-android{background:#3ddc84;color:#000}
-.steps{background:#0d1117;border-radius:6px;padding:12px 14px;font-size:12px;color:#7d8590;line-height:2.2;margin-top:10px}
+.head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.ico{font-size:30px;width:44px;text-align:center}
+.title{font-size:15px;font-weight:700;color:#e6edf3}
+.desc{font-size:12px;color:#7d8590;margin-top:2px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:700;cursor:pointer;border:none}
+.btn-cyan{background:#00bcd4;color:#fff}
+.btn-green{background:#3ddc84;color:#000}
+.btn-ghost{background:transparent;border:1px solid #30363d;color:#8b949e}
+.steps{background:#0d1117;border-radius:6px;padding:12px 14px;font-size:12px;color:#7d8590;line-height:2.2;margin-bottom:12px}
 .steps b{color:#00bcd4}
-.badge{display:inline-block;background:#3ddc8422;border:1px solid #3ddc8455;color:#3ddc84;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:8px}
-.note{background:#161b22;border:1px solid #30363d;border-left:3px solid #00bcd4;border-radius:0 6px 6px 0;padding:10px 14px;font-size:12px;color:#7d8590;margin-top:12px;line-height:1.6}
-a.back{color:#00bcd4;font-size:13px;text-decoration:none;display:inline-block;margin-bottom:18px}
+.steps code{background:#21262d;color:#3ddc84;padding:1px 6px;border-radius:3px;font-size:11px}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px}
+.note{background:#0d2137;border-left:3px solid #00bcd4;padding:10px 14px;border-radius:0 6px 6px 0;font-size:12px;color:#7d8590;margin-top:10px;line-height:1.6}
+.back{color:#00bcd4;font-size:13px;text-decoration:none;display:inline-block;margin-bottom:18px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
 </style>
 </head>
 <body>
-<div class="container">
-  <a href="/" class="back">← Back to App</a>
-  <h1>📡 CAF-WIFI — Downloads</h1>
-  <p class="sub">Get CAF-WIFI on any device</p>
+<div class="wrap">
+  <a href="/" class="back">← Back to CAF-WIFI</a>
+  <h1>📥 Get CAF-WIFI</h1>
+  <p class="sub">Install or download for any platform</p>
 
-  <!-- Android APK -->
+  <!-- ANDROID — PWA (works NOW) -->
   <div class="card">
-    <div class="card-header">
-      <span class="icon">🤖</span>
+    <div class="head">
+      <span class="ico">🤖</span>
       <div>
-        <div class="card-title">Android App (APK) <span class="badge">NATIVE</span></div>
-        <div class="card-sub">Scans WiFi directly — no laptop needed</div>
+        <div class="title">Android Phone
+          <span class="badge" style="background:#3ddc8433;color:#3ddc84">WORKS NOW</span>
+        </div>
+        <div class="desc">Install directly from your browser — no APK needed</div>
       </div>
     </div>
     <div class="steps">
-      <b>Step 1:</b> Download the APK below<br/>
-      <b>Step 2:</b> On your phone: Settings → Security → Unknown sources → Allow<br/>
-      <b>Step 3:</b> Open the downloaded APK → Install<br/>
-      <b>Step 4:</b> Open CAF-WIFI → grant location + WiFi permissions<br/>
-      <b>Step 5:</b> Tap Scan → see all real networks! ✅
+      <b>Step 1:</b> Open <code>caf-wifi-new.vercel.app</code> in Chrome on your Android<br/>
+      <b>Step 2:</b> Tap <b>⋮</b> menu (top right) → <b>"Add to Home Screen"</b><br/>
+      <b>Step 3:</b> Tap <b>Add</b> → app icon appears on your home screen ✅<br/>
+      <b>Step 4:</b> For real WiFi scan → connect the Windows Agent below
     </div>
-    <a href="/caf-wifi.apk" class="btn btn-android">⬇ Download Android APK</a>
-    <div class="note">⚠️ APK must be built first. Run <code style="color:#00bcd4">bash build-android-apk.sh</code> in Firebase Studio terminal, then deploy.</div>
+    <a href="/" class="btn btn-green">Open App in Chrome →</a>
+    <div class="note">📱 The app opens fullscreen like a native app. For real WiFi scanning on the phone itself, connect it to the Windows Agent running on your laptop.</div>
   </div>
 
-  <!-- Windows Agent -->
+  <!-- WINDOWS AGENT -->
   <div class="card">
-    <div class="card-header">
-      <span class="icon">🪟</span>
+    <div class="head">
+      <span class="ico">🪟</span>
       <div>
-        <div class="card-title">Windows Agent</div>
-        <div class="card-sub">Run on your laptop — phone connects to it</div>
+        <div class="title">Windows Agent
+          <span class="badge" style="background:#00bcd433;color:#00bcd4">DOWNLOAD READY</span>
+        </div>
+        <div class="desc">Run on your PC — phone connects to it for real WiFi data</div>
       </div>
     </div>
     <div class="steps">
-      <b>Step 1:</b> Download both files to same folder<br/>
-      <b>Step 2:</b> Double-click caf-wifi-agent.bat<br/>
-      <b>Step 3:</b> Note your IP (e.g. 172.16.46.148)<br/>
-      <b>Step 4:</b> In app → Connect Agent → enter: http://IP:7788/api/scan
+      <b>Step 1:</b> Download both files below to the same folder<br/>
+      <b>Step 2:</b> Double-click <code>caf-wifi-agent.bat</code><br/>
+      <b>Step 3:</b> Agent shows your PC IP (e.g. <code>172.16.46.148</code>)<br/>
+      <b>Step 4:</b> In app on phone → <b>Connect Agent</b> → enter:<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;<code>http://172.16.46.148:7788/api/scan</code><br/>
+      <b>Step 5:</b> Real WiFi networks appear on your phone ✅
     </div>
-    <a href="/caf-wifi-agent.bat" download class="btn">⬇ Download .bat</a>
-    <a href="/caf-wifi-agent.js" download class="btn btn-outline" style="margin-left:8px">⬇ Download .js</a>
+    <div class="row">
+      <a href="/caf-wifi-agent.bat" download class="btn btn-cyan">⬇ caf-wifi-agent.bat</a>
+      <a href="/caf-wifi-agent.js"  download class="btn btn-ghost">⬇ caf-wifi-agent.js</a>
+    </div>
+    <div class="note">⚠️ Requires <a href="https://nodejs.org" style="color:#00bcd4">Node.js</a> installed on your PC. Phone and PC must be on the same WiFi network.</div>
   </div>
 
-  <!-- PWA -->
+  <!-- LINUX / MAC -->
   <div class="card">
-    <div class="card-header">
-      <span class="icon">🌐</span>
+    <div class="head">
+      <span class="ico">🐧</span>
       <div>
-        <div class="card-title">Install as App (PWA)</div>
-        <div class="card-sub">Android + iPhone — no download needed</div>
+        <div class="title">Linux / macOS Agent
+          <span class="badge" style="background:#00bcd433;color:#00bcd4">DOWNLOAD READY</span>
+        </div>
+        <div class="desc">Same as Windows — run on laptop, phone connects to it</div>
       </div>
     </div>
     <div class="steps">
-      <b>Android Chrome:</b> Open app → ⋮ menu → Add to Home Screen<br/>
-      <b>iPhone Safari:</b> Open app → Share → Add to Home Screen<br/>
-      <b>Result:</b> App icon on home screen, opens fullscreen ✅
+      <b>Step 1:</b> Download <code>caf-wifi-agent.js</code><br/>
+      <b>Step 2:</b> Open terminal → <code>node caf-wifi-agent.js</code><br/>
+      <b>Step 3:</b> Enter the IP shown in app → Connect Agent
     </div>
-    <a href="/" class="btn">Open Web App</a>
+    <a href="/caf-wifi-agent.js" download class="btn btn-cyan">⬇ caf-wifi-agent.js</a>
   </div>
 
-  <!-- Linux/Mac -->
+  <!-- iPHONE -->
   <div class="card">
-    <div class="card-header">
-      <span class="icon">🐧</span>
+    <div class="head">
+      <span class="ico">🍎</span>
       <div>
-        <div class="card-title">Linux / macOS Agent</div>
-        <div class="card-sub">Run on your laptop for real scanning</div>
+        <div class="title">iPhone / iPad
+          <span class="badge" style="background:#3ddc8433;color:#3ddc84">WORKS NOW</span>
+        </div>
+        <div class="desc">Install from Safari — no App Store needed</div>
       </div>
     </div>
     <div class="steps">
-      <b>Step 1:</b> Download caf-wifi-agent.js<br/>
-      <b>Step 2:</b> node caf-wifi-agent.js<br/>
-      <b>Step 3:</b> In app → Connect Agent → enter your IP
+      <b>Step 1:</b> Open <code>caf-wifi-new.vercel.app</code> in <b>Safari</b><br/>
+      <b>Step 2:</b> Tap <b>Share</b> button (box with arrow)<br/>
+      <b>Step 3:</b> Scroll down → <b>"Add to Home Screen"</b><br/>
+      <b>Step 4:</b> Tap <b>Add</b> → app icon on home screen ✅
     </div>
-    <a href="/caf-wifi-agent.js" download class="btn">⬇ Download agent.js</a>
+    <a href="/" class="btn btn-cyan">Open App in Safari →</a>
   </div>
+
+  <!-- DESKTOP -->
+  <div class="card">
+    <div class="head">
+      <span class="ico">🖥️</span>
+      <div>
+        <div class="title">Desktop App (Electron)
+          <span class="badge" style="background:#7d85901a;color:#7d8590">ADVANCED</span>
+        </div>
+        <div class="desc">Windows / Linux / macOS — native desktop with real WiFi scanning</div>
+      </div>
+    </div>
+    <div class="steps">
+      <b>Requires:</b> Node.js + Firebase Studio access<br/>
+      <b>Run:</b> <code>cd ~/studio/caf-wifi-new && npm run electron:dev</code><br/>
+      <b>Build installer:</b> <code>npm run dist:linux</code> or <code>dist:win</code>
+    </div>
+  </div>
+
+  <p style="font-size:11px;color:#444;text-align:center;margin-top:16px">
+    CAF-WIFI Enterprise Analyzer v3.0.0 · hanybkhite@gmail.com
+  </p>
 </div>
 </body>
 </html>
