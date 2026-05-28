@@ -18,7 +18,7 @@
     "dist:win": "next build && electron-builder --win",
     "dist:mac": "next build && electron-builder --mac",
     "dist:linux": "next build && electron-builder --linux",
-    "build:mobile": "BUILD_TARGET=mobile next build",
+    "build:mobile": "next build",
     "android:sync": "npm run build:mobile && npx cap sync android",
     "android:open": "npx cap open android",
     "android:run": "npm run android:sync && npx cap run android"
