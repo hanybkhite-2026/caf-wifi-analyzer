@@ -1115,7 +1115,7 @@ export default function App(){
             <div style={{textAlign:'left',marginBottom:'20px'}}>
               <div style={{fontWeight:'700',fontSize:'14px',color:T.text,marginBottom:'10px'}}>📥 Downloads — Get CAF-WIFI on every device</div>
               {[
-                {icon:'🤖',title:'Android APK',sub:'Native app — scans WiFi directly on phone',badge:'BEST',badgeCol:'#3ddc84',badgeTxt:'#000',href:'https://caf-wifi-new.vercel.app/download.html'},
+                {icon:'🤖',title:'Android (Install App)',sub:'Open in Chrome → ⋮ → Add to Home Screen',badge:'FREE',bc:'#3ddc84',bt:'#000',href:'/',dl:false},
                 {icon:'🪟',title:'Windows Agent (.bat)',sub:'Run on PC — phone connects for real scan',badge:'PC',badgeCol:T.cyan,badgeTxt:'#fff',href:'https://caf-wifi-new.vercel.app/caf-wifi-agent.bat',download:true},
                 {icon:'🐧',title:'Linux / macOS Agent',sub:'node caf-wifi-agent.js — then connect phone',badge:'LAPTOP',badgeCol:T.cyan,badgeTxt:'#fff',href:'https://caf-wifi-new.vercel.app/caf-wifi-agent.js',download:true},
               ].map((d,i)=>(
