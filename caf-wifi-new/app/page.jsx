@@ -925,26 +925,39 @@ export default function App(){
           <div style={s.p}>
             <div style={{background:T.card,borderRadius:'8px',padding:'20px',marginBottom:'12px',textAlign:'center'}}>
               {/* Speedometer */}
-              <div style={{margin:'0 auto 14px',width:'200px'}}>
-                <svg width="200" height="115" viewBox="0 0 200 115">
-                  <path d="M18 100 A82 82 0 0 1 182 100" fill="none" stroke={dark?'#21262d':'#e0e0e0'} strokeWidth="14" strokeLinecap="round"/>
+                            {/* Speedometer — responsive, contained */}
+              <div style={{margin:'0 auto 16px',width:'100%',maxWidth:'280px',overflow:'hidden'}}>
+                <svg width="100%" viewBox="0 0 280 160" style={{display:'block',overflow:'visible'}}>
+                  {/* Background track */}
+                  <path d="M28 140 A112 112 0 0 1 252 140" fill="none" stroke={dark?'#21262d':'#e0e0e0'} strokeWidth="16" strokeLinecap="round"/>
+                  {/* Colored progress arc */}
                   {speedRes&&(()=>{
                     const pct=Math.min(1,speedRes.dl/600);
                     const a=-Math.PI+pct*Math.PI;
-                    const ex=100+82*Math.cos(a),ey=100+82*Math.sin(a);
+                    const ex=140+112*Math.cos(a),ey=140+112*Math.sin(a);
                     const lg=pct>.5?1:0;
                     const col=speedRes.dl>300?'#4caf50':speedRes.dl>150?'#ffc107':'#f44336';
-                    return <path d={`M18 100 A82 82 0 ${lg} 1 ${ex} ${ey}`} fill="none" stroke={col} strokeWidth="14" strokeLinecap="round"/>;
+                    return <path d={`M28 140 A112 112 0 ${lg} 1 ${ex} ${ey}`} fill="none" stroke={col} strokeWidth="16" strokeLinecap="round"/>;
                   })()}
-                  {[0,100,200,300,400,500,600].map((v,i)=>{const a=-Math.PI+(i/6)*Math.PI;const r=66,tx=100+r*Math.cos(a),ty=100+r*Math.sin(a);return <text key={v} x={tx} y={ty+3} fill={dark?'#555':'#bbb'} fontSize="8.5" textAnchor="middle">{v}</text>;})}
-                  {(speedState==='done'||speedState==='download')&&speedRes&&(()=>{
-                    const pct=Math.min(1,speedRes.dl/600);
+                  {/* Speed labels along arc */}
+                  {[0,100,200,300,400,500,600].map((v,i)=>{
+                    const a=-Math.PI+(i/6)*Math.PI;
+                    const r=90,tx=140+r*Math.cos(a),ty=140+r*Math.sin(a);
+                    return <text key={v} x={tx} y={ty+3} fill={dark?'#666':'#aaa'} fontSize="10" textAnchor="middle">{v}</text>;
+                  })}
+                  {/* Needle */}
+                  {(()=>{
+                    const val=speedState==='done'&&speedRes?speedRes.dl:speedState==='upload'&&speedRes?speedRes.ul:0;
+                    const pct=Math.min(1,val/600);
                     const a=-Math.PI+pct*Math.PI;
-                    return <line x1="100" y1="100" x2={100+76*Math.cos(a)} y2={100+76*Math.sin(a)} stroke={T.cyan} strokeWidth="3" strokeLinecap="round"/>;
+                    return <line x1="140" y1="140" x2={140+100*Math.cos(a)} y2={140+100*Math.sin(a)} stroke={T.cyan} strokeWidth="3" strokeLinecap="round"/>;
                   })()}
-                  <circle cx="100" cy="100" r="6" fill={T.cyan}/>
-                  <text x="100" y="80" fill={T.text} fontSize="24" fontWeight="800" textAnchor="middle" fontFamily="monospace">{speedRes&&speedState==='done'?speedRes.dl:speedState==='idle'?'—':'...'}</text>
-                  <text x="100" y="93" fill={T.sub} fontSize="10" textAnchor="middle">Mbps</text>
+                  <circle cx="140" cy="140" r="7" fill={T.cyan}/>
+                  {/* Big number */}
+                  <text x="140" y="115" fill={T.text} fontSize="32" fontWeight="800" textAnchor="middle" fontFamily="monospace">
+                    {speedRes&&speedState==='done'?speedRes.dl:speedState==='idle'?'—':'...'}
+                  </text>
+                  <text x="140" y="133" fill={T.sub} fontSize="11" textAnchor="middle">Mbps</text>
                 </svg>
               </div>
               <div style={{fontSize:'13px',color:T.sub,marginBottom:'12px',minHeight:'18px'}}>
@@ -960,14 +973,27 @@ export default function App(){
                 </div>
               )}
               {speedRes&&speedState==='done'&&(
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px',maxWidth:'320px',margin:'0 auto 14px'}}>
-                  {[{l:'DOWNLOAD',v:speedRes.dl,u:'Mbps',c:T.blue},{l:'UPLOAD',v:speedRes.ul,u:'Mbps',c:T.cyan},{l:'PING',v:speedRes.ping,u:'ms',c:T.yellow},{l:'JITTER',v:speedRes.jitter,u:'ms',c:'#e91e63'}].map(x=>(
-                    <div key={x.l} style={{background:dark?x.c+'15':'#f5f5f5',border:`1px solid ${x.c}44`,borderRadius:'8px',padding:'12px',textAlign:'center'}}>
-                      <div style={{fontSize:'9px',color:T.sub,marginBottom:'3px',letterSpacing:'.1em'}}>{x.l}</div>
-                      <div style={{fontSize:'24px',fontWeight:'800',color:x.c,fontFamily:'monospace'}}>{x.v}</div>
-                      <div style={{fontSize:'11px',color:T.sub}}>{x.u}</div>
-                    </div>
-                  ))}
+                <div style={{width:'100%',maxWidth:'340px',margin:'0 auto 14px'}}>
+                  {/* Top row: Download + Upload */}
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px',marginBottom:'8px'}}>
+                    {[{l:'DOWNLOAD',v:speedRes.dl,u:'Mbps',c:T.blue},{l:'UPLOAD',v:speedRes.ul,u:'Mbps',c:T.cyan}].map(x=>(
+                      <div key={x.l} style={{background:dark?x.c+'18':'#f5f5f5',border:`1px solid ${x.c}55`,borderRadius:'8px',padding:'14px 10px',textAlign:'center'}}>
+                        <div style={{fontSize:'10px',color:T.sub,marginBottom:'4px',letterSpacing:'.1em'}}>{x.l}</div>
+                        <div style={{fontSize:'28px',fontWeight:'800',color:x.c,fontFamily:'monospace',lineHeight:1}}>{x.v}</div>
+                        <div style={{fontSize:'11px',color:T.sub,marginTop:'2px'}}>{x.u}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Bottom row: Ping + Jitter */}
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px'}}>
+                    {[{l:'PING',v:speedRes.ping,u:'ms',c:T.yellow},{l:'JITTER',v:speedRes.jitter,u:'ms',c:'#e91e63'}].map(x=>(
+                      <div key={x.l} style={{background:dark?x.c+'18':'#f5f5f5',border:`1px solid ${x.c}55`,borderRadius:'8px',padding:'12px 10px',textAlign:'center'}}>
+                        <div style={{fontSize:'10px',color:T.sub,marginBottom:'3px',letterSpacing:'.1em'}}>{x.l}</div>
+                        <div style={{fontSize:'22px',fontWeight:'800',color:x.c,fontFamily:'monospace',lineHeight:1}}>{x.v}</div>
+                        <div style={{fontSize:'11px',color:T.sub,marginTop:'2px'}}>{x.u}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
               {speedRes&&<div style={{display:'inline-flex',alignItems:'center',gap:'8px',background:speedRes.rating==='Excellent'?T.green+'22':speedRes.rating==='Good'?T.blue+'22':T.yellow+'22',border:`1px solid ${speedRes.rating==='Excellent'?T.green:speedRes.rating==='Good'?T.blue:T.yellow}`,borderRadius:'20px',padding:'6px 16px',marginBottom:'16px'}}>
@@ -1114,7 +1140,10 @@ export default function App(){
           <div style={s.sheet}>
             <div style={{fontWeight:'700',fontSize:'16px',color:T.text,marginBottom:'6px'}}>🔗 Connect Local Agent</div>
             <div style={{fontSize:'12px',color:T.sub,marginBottom:'14px',lineHeight:'1.6'}}>
-              Download the <strong style={{color:T.cyan}}>CAF-WIFI Agent</strong> to your laptop/PC, run it, then enter your laptop's IP below.
+              Run the <strong style={{color:T.cyan}}>CAF-WIFI Agent</strong> on your laptop/PC. Your phone connects to it for real WiFi scanning.
+              <div style={{marginTop:'6px',padding:'8px',background:T.card2,borderRadius:'6px',fontSize:'11px',lineHeight:'1.8'}}>
+                📱 <strong style={{color:T.text}}>On your Android phone:</strong> make sure it's on the <strong style={{color:T.cyan}}>same WiFi network</strong> as your laptop, then enter the URL below.
+              </div>
             </div>
             {/* Download buttons */}
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'8px',marginBottom:'14px'}}>
