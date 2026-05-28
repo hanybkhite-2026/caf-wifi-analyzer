@@ -1109,7 +1109,35 @@ export default function App(){
             <div style={{width:'64px',height:'64px',background:'linear-gradient(135deg,#00838f,#00bcd4)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'28px',margin:'0 auto 16px'}}>📡</div>
             <div style={{fontSize:'22px',fontWeight:'700',marginBottom:'4px',color:T.text}}>CAF-WIFI</div>
             <div style={{fontSize:'13px',color:T.cyan,marginBottom:'4px'}}>Enterprise WiFi Analyzer v3.0.0</div>
-            <div style={{fontSize:'12px',color:T.sub,marginBottom:'24px'}}>Professional Network Infrastructure Analysis</div>
+            <div style={{fontSize:'12px',color:T.sub,marginBottom:'16px'}}>Professional Network Infrastructure Analysis</div>
+
+            {/* ── DOWNLOAD CARDS ── */}
+            <div style={{textAlign:'left',marginBottom:'20px'}}>
+              <div style={{fontWeight:'700',fontSize:'14px',color:T.text,marginBottom:'10px'}}>📥 Downloads — Get CAF-WIFI on every device</div>
+              {[
+                {icon:'🤖',title:'Android APK',sub:'Native app — scans WiFi directly on phone',badge:'BEST',badgeCol:'#3ddc84',badgeTxt:'#000',href:'https://caf-wifi-new.vercel.app/download.html'},
+                {icon:'🪟',title:'Windows Agent (.bat)',sub:'Run on PC — phone connects for real scan',badge:'PC',badgeCol:T.cyan,badgeTxt:'#fff',href:'https://caf-wifi-new.vercel.app/caf-wifi-agent.bat',download:true},
+                {icon:'🐧',title:'Linux / macOS Agent',sub:'node caf-wifi-agent.js — then connect phone',badge:'LAPTOP',badgeCol:T.cyan,badgeTxt:'#fff',href:'https://caf-wifi-new.vercel.app/caf-wifi-agent.js',download:true},
+              ].map((d,i)=>(
+                <a key={i} href={d.href} target={d.download?'_self':'_blank'} rel="noreferrer"
+                   download={d.download||undefined}
+                   style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:T.card,border:`1px solid ${T.border}`,borderRadius:'8px',padding:'12px 14px',textDecoration:'none',marginBottom:'8px'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+                    <span style={{fontSize:'24px'}}>{d.icon}</span>
+                    <div>
+                      <div style={{fontSize:'13px',fontWeight:'700',color:T.text}}>{d.title}</div>
+                      <div style={{fontSize:'11px',color:T.sub,marginTop:'1px'}}>{d.sub}</div>
+                    </div>
+                  </div>
+                  <span style={{background:d.badgeCol,color:d.badgeTxt,fontSize:'10px',fontWeight:'700',padding:'3px 8px',borderRadius:'20px',whiteSpace:'nowrap',marginLeft:'8px'}}>⬇ {d.badge}</span>
+                </a>
+              ))}
+              <a href="https://caf-wifi-new.vercel.app/download.html" target="_blank" rel="noreferrer"
+                 style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'6px',background:'transparent',border:`1px solid ${T.cyan}44`,borderRadius:'8px',padding:'10px',textDecoration:'none',color:T.cyan,fontSize:'12px',fontWeight:'600'}}>
+                📋 All downloads &amp; instructions →
+              </a>
+            </div>
+
             <div style={{textAlign:'left'}}>
               {[
                 {i:'📡',t:'Identify Nearby Access Points',d:'Detects all nearby WiFi networks with SSID, MAC, signal (dBm), channel, frequency range, bandwidth, vendor (OUI), estimated distance, WiFi standard, and security capabilities.'},
