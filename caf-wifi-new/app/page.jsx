@@ -463,7 +463,7 @@ export default function App(){
     {id:'se',l:'Settings',i:'⚙️'},
     {id:'ab',l:'About',i:'ℹ️'},
   ];
-  const BNAV=[{id:'ap',l:'Access Points',i:'📡'},{id:'cr',l:'Ch. Rating',i:'⭐'},{id:'cg',l:'Ch. Graph',i:'📊'},{id:'tg',l:'Time Graph',i:'📈'},{id:'st',l:'Speed Test',i:'⚡'}];
+  const BNAV=[{id:'ap',l:'Access Points',i:'📡'},{id:'cr',l:'Ch. Rating',i:'⭐'},{id:'cg',l:'Ch. Graph',i:'📊'},{id:'tg',l:'Time Graph',i:'📈'},{id:'st',l:'Speed Test',i:'⚡'},{id:'ab',l:'Downloads',i:'📥'}];
 
   if(booting)return <BootScreen progress={bootPct} status={bootStatus} dark={dark}/>;
 
@@ -491,8 +491,16 @@ export default function App(){
               </button>
             ))}
           </nav>
-          <div style={{padding:'10px 14px',borderTop:`1px solid ${T.border}`,fontSize:'11px',color:T.sub,textAlign:'center'}}>
-            CAF-WIFI v3.0.0 · Scan #{scanN}
+          <div style={{padding:'10px 14px',borderTop:`1px solid ${T.border}`}}>
+            <a href="https://caf-wifi-new.vercel.app/download.html" target="_blank" rel="noreferrer"
+               style={{display:'flex',alignItems:'center',gap:'8px',background:T.cyan+'22',border:`1px solid ${T.cyan}44`,borderRadius:'6px',padding:'8px 12px',textDecoration:'none',marginBottom:'8px'}}>
+              <span style={{fontSize:'16px'}}>📥</span>
+              <div>
+                <div style={{fontSize:'12px',fontWeight:'700',color:T.cyan}}>Downloads</div>
+                <div style={{fontSize:'10px',color:T.sub}}>Android APK · Windows · Linux</div>
+              </div>
+            </a>
+            <div style={{fontSize:'10px',color:T.sub,textAlign:'center'}}>CAF-WIFI v3.0.0 · Scan #{scanN}</div>
           </div>
         </aside>
       )}
@@ -561,6 +569,15 @@ export default function App(){
             )}
             {aps.length===0&&(
               <div style={{padding:'20px 14px'}}>
+                {/* Top download strip */}
+                <a href="https://caf-wifi-new.vercel.app/download.html" target="_blank" rel="noreferrer"
+                   style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:dark?'#0d2137':'#e3f2fd',border:`1px solid ${T.cyan}44`,borderRadius:'8px',padding:'10px 14px',textDecoration:'none',marginBottom:'16px'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                    <span style={{fontSize:'18px'}}>📥</span>
+                    <span style={{fontSize:'13px',fontWeight:'700',color:T.cyan}}>Get the app for your device</span>
+                  </div>
+                  <span style={{fontSize:'12px',color:T.cyan,fontWeight:'700'}}>→ Download</span>
+                </a>
                 <div style={{textAlign:'center',marginBottom:'20px'}}>
                   <div style={{fontSize:'44px',marginBottom:'10px'}}>📡</div>
                   <div style={{fontSize:'15px',fontWeight:'700',color:T.text,marginBottom:'4px'}}>No networks found</div>
