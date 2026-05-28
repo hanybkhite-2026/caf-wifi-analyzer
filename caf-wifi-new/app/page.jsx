@@ -1113,17 +1113,38 @@ export default function App(){
         <div style={s.overlay} onClick={e=>{if(e.target===e.currentTarget)setShowAgentModal(false);}}>
           <div style={s.sheet}>
             <div style={{fontWeight:'700',fontSize:'16px',color:T.text,marginBottom:'6px'}}>🔗 Connect Local Agent</div>
-            <div style={{fontSize:'12px',color:T.sub,marginBottom:'16px',lineHeight:'1.6'}}>
-              For real WiFi scanning, run the app on your local network and enter its address.<br/>
-              <strong style={{color:T.cyan}}>On Android/iPhone:</strong> connect to the same WiFi as your laptop, then enter your laptop's IP.
+            <div style={{fontSize:'12px',color:T.sub,marginBottom:'14px',lineHeight:'1.6'}}>
+              Download the <strong style={{color:T.cyan}}>CAF-WIFI Agent</strong> to your laptop/PC, run it, then enter your laptop's IP below.
             </div>
-            <div style={{background:T.card2,borderRadius:'6px',padding:'12px',marginBottom:'14px',fontSize:'12px',fontFamily:'monospace',color:T.green,lineHeight:'1.8'}}>
-              <div style={{color:T.sub,fontFamily:'sans-serif',fontSize:'11px',marginBottom:'4px'}}>Run on your laptop:</div>
-              cd ~/studio/caf-wifi-new && npm run dev<br/>
-              <div style={{color:T.sub,fontFamily:'sans-serif',fontSize:'11px',margin:'6px 0 2px'}}>Find your laptop IP:</div>
-              ip addr | grep 192.168<br/>
-              <div style={{color:T.sub,fontFamily:'sans-serif',fontSize:'11px',margin:'6px 0 2px'}}>Then enter below:</div>
-              http://192.168.x.x:3000/api/scan
+            {/* Download buttons */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'8px',marginBottom:'14px'}}>
+              {[
+                {label:'🪟 Windows',sub:'.bat + .js',href:'/caf-wifi-agent.bat',hint:'Download both files to same folder'},
+                {label:'🐧 Linux',sub:'.sh + .js',href:'/caf-wifi-agent.sh',hint:'Run: bash caf-wifi-agent.sh'},
+                {label:'🍎 macOS',sub:'.sh + .js',href:'/caf-wifi-agent.sh',hint:'Run: bash caf-wifi-agent.sh'},
+              ].map((d,i)=>(
+                <div key={i} style={{background:T.card2,borderRadius:'6px',padding:'10px',textAlign:'center'}}>
+                  <div style={{fontWeight:'700',fontSize:'12px',color:T.text,marginBottom:'2px'}}>{d.label}</div>
+                  <div style={{fontSize:'10px',color:T.sub,marginBottom:'8px'}}>{d.hint}</div>
+                  <a href={d.href} download style={{background:T.cyan,color:'#fff',padding:'5px 10px',borderRadius:'4px',fontSize:'11px',fontWeight:'700',textDecoration:'none',display:'inline-block'}}>
+                    ⬇ Download
+                  </a>
+                </div>
+              ))}
+            </div>
+            {/* Also download agent.js */}
+            <div style={{display:'flex',justifyContent:'center',marginBottom:'14px'}}>
+              <a href="/caf-wifi-agent.js" download style={{background:'transparent',border:`1px solid ${T.border}`,color:T.sub,padding:'5px 14px',borderRadius:'4px',fontSize:'11px',textDecoration:'none'}}>
+                ⬇ Download caf-wifi-agent.js (required for all platforms)
+              </a>
+            </div>
+            <div style={{background:T.card2,borderRadius:'6px',padding:'10px',marginBottom:'14px',fontSize:'11px',color:T.sub,lineHeight:'1.7'}}>
+              <strong style={{color:T.text}}>How to use:</strong><br/>
+              1. Download both files to the same folder<br/>
+              2. Run the launcher for your OS<br/>
+              3. The agent will show your laptop IP<br/>
+              4. Make sure phone is on same WiFi<br/>
+              5. Enter <span style={{color:T.cyan,fontFamily:'monospace'}}>http://YOUR-IP:7788/api/scan</span> below
             </div>
             <div style={{marginBottom:'12px'}}>
               <label style={{fontSize:'11px',color:T.sub,display:'block',marginBottom:'4px'}}>AGENT URL</label>
