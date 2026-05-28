@@ -25,7 +25,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="manifest" href="/manifest.json"/>
         <link rel="apple-touch-icon" href="/icon-192.png"/>
       </head>
-      <body style={{ margin:0, padding:0, background:"#0d1117", overflow:"hidden", height:"100vh" }}>
+      <body style={{
+        margin: 0, padding: 0,
+        background: "#0d1117",
+        overflow: "hidden",
+        height: "100dvh",
+        WebkitTapHighlightColor: "transparent",
+        WebkitTextSizeAdjust: "100%",
+        touchAction: "manipulation",
+      }}>
         {children}
       </body>
     </html>
