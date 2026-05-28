@@ -569,7 +569,7 @@ export default function App(){
                 {/* Platform cards */}
                 {[
                   {icon:'🪟',title:'Windows PC / Laptop',steps:['Download caf-wifi-agent.bat from the app','Double-click to run','Enter the IP shown → Connect Agent'],url:'https://caf-wifi-new.vercel.app/caf-wifi-agent.bat',btn:'Download .bat'},
-                  {icon:'🤖',title:'Android Phone (APK)',steps:['Build Android APK with Capacitor (see instructions below)','Install APK on your Android phone','App scans WiFi directly — no laptop needed!'],url:null,btn:'See setup'},
+                  {icon:'🤖',title:'Android Phone (APK)',steps:['Run: npm run android:sync then android:open','Build APK in Android Studio','Install on phone — scans WiFi natively!'],url:null,btn:'See setup'},
                   {icon:'🐧',title:'Linux / macOS',steps:['Download caf-wifi-agent.js','Run: node caf-wifi-agent.js','Enter IP shown → Connect Agent'],url:'https://caf-wifi-new.vercel.app/caf-wifi-agent.js',btn:'Download .js'},
                 ].map((p,i)=>(
                   <div key={i} style={{background:T.card,borderRadius:'8px',padding:'14px',marginBottom:'10px',border:`1px solid ${T.border}`}}>
@@ -1196,16 +1196,12 @@ export default function App(){
             <div style={{fontWeight:'700',fontSize:'16px',color:T.text,marginBottom:'4px'}}>🤖 Android APK Setup</div>
             <div style={{fontSize:'12px',color:T.sub,marginBottom:'16px'}}>Build CAF-WIFI as a native Android app — scans WiFi directly, no laptop needed</div>
             {[
-              {step:'1',title:'Requirements',desc:'Node.js, Android Studio, Java 17+',color:T.cyan},
-              {step:'2',title:'Install Capacitor',code:'cd ~/studio/caf-wifi-new
-npm install @capacitor/core @capacitor/cli @capacitor/android',color:T.blue},
-              {step:'3',title:'Init & Add Android',code:'npx cap init "CAF-WIFI" "com.caf.wifi" --web-dir=out
-npx cap add android',color:T.blue},
-              {step:'4',title:'Build the app',code:'npm run build
-npx cap sync android',color:T.blue},
-              {step:'5',title:'Open Android Studio',code:'npx cap open android
-# Then: Build → Build APK(s)',color:T.green},
-              {step:'6',title:'Install on phone',desc:'Copy app-debug.apk to phone → tap to install. Grant WiFi permissions.',color:T.green},
+              {step:'1',title:'Requirements',desc:'Node.js + Android Studio + Java 17',color:T.cyan},
+              {step:'2',title:'Install Capacitor',code:'npm install @capacitor/core @capacitor/cli @capacitor/android',color:T.blue},
+              {step:'3',title:'Init & Add Android',code:'npx cap add android',color:T.blue},
+              {step:'4',title:'Build & Sync',code:'npm run android:sync',color:T.blue},
+              {step:'5',title:'Open Android Studio',code:'npm run android:open  →  Build → Build APK(s)',color:T.green},
+              {step:'6',title:'Install on phone',desc:'Copy app-debug.apk to phone → tap to install → grant WiFi permissions',color:T.green},
             ].map((s2,i)=>(
               <div key={i} style={{display:'flex',gap:'10px',marginBottom:'12px',alignItems:'flex-start'}}>
                 <div style={{width:'24px',height:'24px',borderRadius:'50%',background:s2.color+'33',border:`1px solid ${s2.color}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'11px',fontWeight:'700',color:s2.color,flexShrink:0}}>{s2.step}</div>
