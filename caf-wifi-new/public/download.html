@@ -2,76 +2,107 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>CAF-WIFI Agent Download</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>CAF-WIFI — Download</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#0d1117;color:#e6edf3;font-family:'Segoe UI',system-ui,sans-serif;padding:24px;min-height:100vh}
-.container{max-width:600px;margin:0 auto}
-h1{color:#00bcd4;font-size:22px;margin-bottom:6px}
-.sub{color:#7d8590;font-size:13px;margin-bottom:28px}
-.card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:20px;margin-bottom:16px}
-.card h2{font-size:15px;margin-bottom:4px;color:#e6edf3}
-.card p{font-size:12px;color:#7d8590;margin-bottom:14px;line-height:1.6}
-.btn{display:inline-block;background:#00bcd4;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:700;margin-right:8px;margin-bottom:8px}
-.btn.outline{background:transparent;border:1px solid #30363d;color:#7d8590}
-.steps{background:#0d1117;border-radius:6px;padding:14px;font-size:12px;color:#7d8590;line-height:2;font-family:monospace}
+body{background:#0d1117;color:#e6edf3;font-family:'Segoe UI',system-ui,sans-serif;padding:20px;min-height:100vh}
+.container{max-width:580px;margin:0 auto}
+h1{color:#00bcd4;font-size:22px;margin-bottom:4px}
+.sub{color:#7d8590;font-size:13px;margin-bottom:24px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:18px;margin-bottom:14px}
+.card-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.icon{font-size:28px}
+.card-title{font-size:15px;font-weight:700;color:#e6edf3}
+.card-sub{font-size:12px;color:#7d8590;margin-top:2px}
+.btn{display:inline-flex;align-items:center;gap:6px;background:#00bcd4;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:700;margin-top:10px}
+.btn-outline{background:transparent;border:1px solid #30363d;color:#8b949e}
+.btn-android{background:#3ddc84;color:#000}
+.steps{background:#0d1117;border-radius:6px;padding:12px 14px;font-size:12px;color:#7d8590;line-height:2.2;margin-top:10px}
 .steps b{color:#00bcd4}
-.note{background:#1c2128;border-left:3px solid #00bcd4;padding:10px 14px;border-radius:0 6px 6px 0;font-size:12px;color:#7d8590;margin-top:12px;line-height:1.6}
-a.back{color:#00bcd4;font-size:13px;text-decoration:none;display:inline-block;margin-bottom:20px}
+.badge{display:inline-block;background:#3ddc8422;border:1px solid #3ddc8455;color:#3ddc84;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:8px}
+.note{background:#161b22;border:1px solid #30363d;border-left:3px solid #00bcd4;border-radius:0 6px 6px 0;padding:10px 14px;font-size:12px;color:#7d8590;margin-top:12px;line-height:1.6}
+a.back{color:#00bcd4;font-size:13px;text-decoration:none;display:inline-block;margin-bottom:18px}
 </style>
 </head>
 <body>
 <div class="container">
-<a href="/" class="back">← Back to App</a>
-<h1>📡 CAF-WIFI Local Agent</h1>
-<p class="sub">Download and run on your laptop to enable real WiFi scanning on any device</p>
+  <a href="/" class="back">← Back to App</a>
+  <h1>📡 CAF-WIFI — Downloads</h1>
+  <p class="sub">Get CAF-WIFI on any device</p>
 
-<div class="card">
-<h2>🪟 Windows (Recommended)</h2>
-<p>Single file — just download and double-click. Node.js required.</p>
-<a href="/caf-wifi-agent.bat" download class="btn">⬇ Download .bat (Windows)</a>
-<a href="/caf-wifi-agent.js" download class="btn outline">⬇ Also get agent.js</a>
-<div class="steps">
-<b>Step 1:</b> Download caf-wifi-agent.bat<br/>
-<b>Step 2:</b> Double-click to run<br/>
-<b>Step 3:</b> Agent shows your IP (e.g. 172.16.46.148)<br/>
-<b>Step 4:</b> In app → Connect Agent → enter:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;http://172.16.46.148:7788/api/scan
-</div>
-<div class="note">⚠️ If Windows blocks it: right-click → Properties → Unblock → OK</div>
-</div>
+  <!-- Android APK -->
+  <div class="card">
+    <div class="card-header">
+      <span class="icon">🤖</span>
+      <div>
+        <div class="card-title">Android App (APK) <span class="badge">NATIVE</span></div>
+        <div class="card-sub">Scans WiFi directly — no laptop needed</div>
+      </div>
+    </div>
+    <div class="steps">
+      <b>Step 1:</b> Download the APK below<br/>
+      <b>Step 2:</b> On your phone: Settings → Security → Unknown sources → Allow<br/>
+      <b>Step 3:</b> Open the downloaded APK → Install<br/>
+      <b>Step 4:</b> Open CAF-WIFI → grant location + WiFi permissions<br/>
+      <b>Step 5:</b> Tap Scan → see all real networks! ✅
+    </div>
+    <a href="/caf-wifi.apk" class="btn btn-android">⬇ Download Android APK</a>
+    <div class="note">⚠️ APK must be built first. Run <code style="color:#00bcd4">bash build-android-apk.sh</code> in Firebase Studio terminal, then deploy.</div>
+  </div>
 
-<div class="card">
-<h2>🐧 Linux / 🍎 macOS</h2>
-<p>Download agent.js and run with Node.js.</p>
-<a href="/caf-wifi-agent.js" download class="btn">⬇ Download agent.js</a>
-<div class="steps">
-<b>Step 1:</b> Download caf-wifi-agent.js<br/>
-<b>Step 2:</b> Open terminal in download folder<br/>
-<b>Step 3:</b> node caf-wifi-agent.js<br/>
-<b>Step 4:</b> Enter URL shown in app → Connect Agent
-</div>
-</div>
+  <!-- Windows Agent -->
+  <div class="card">
+    <div class="card-header">
+      <span class="icon">🪟</span>
+      <div>
+        <div class="card-title">Windows Agent</div>
+        <div class="card-sub">Run on your laptop — phone connects to it</div>
+      </div>
+    </div>
+    <div class="steps">
+      <b>Step 1:</b> Download both files to same folder<br/>
+      <b>Step 2:</b> Double-click caf-wifi-agent.bat<br/>
+      <b>Step 3:</b> Note your IP (e.g. 172.16.46.148)<br/>
+      <b>Step 4:</b> In app → Connect Agent → enter: http://IP:7788/api/scan
+    </div>
+    <a href="/caf-wifi-agent.bat" download class="btn">⬇ Download .bat</a>
+    <a href="/caf-wifi-agent.js" download class="btn btn-outline" style="margin-left:8px">⬇ Download .js</a>
+  </div>
 
-<div class="card">
-<h2>📱 Mobile (Android / iPhone)</h2>
-<p>Run the agent on your laptop, then connect your phone via the app.</p>
-<div class="steps">
-<b>Step 1:</b> Run agent on laptop (see above)<br/>
-<b>Step 2:</b> Phone must be on SAME WiFi as laptop<br/>
-<b>Step 3:</b> Open app on phone<br/>
-<b>Step 4:</b> Tap "Connect Agent" button<br/>
-<b>Step 5:</b> Enter: http://LAPTOP-IP:7788/api/scan<br/>
-<b>Step 6:</b> Real WiFi scan on your phone! ✅
-</div>
-<div class="note">Your laptop IP from ipconfig (Windows) or ip addr (Linux).<br/>
-Example from your network: http://172.16.46.148:7788/api/scan</div>
-</div>
+  <!-- PWA -->
+  <div class="card">
+    <div class="card-header">
+      <span class="icon">🌐</span>
+      <div>
+        <div class="card-title">Install as App (PWA)</div>
+        <div class="card-sub">Android + iPhone — no download needed</div>
+      </div>
+    </div>
+    <div class="steps">
+      <b>Android Chrome:</b> Open app → ⋮ menu → Add to Home Screen<br/>
+      <b>iPhone Safari:</b> Open app → Share → Add to Home Screen<br/>
+      <b>Result:</b> App icon on home screen, opens fullscreen ✅
+    </div>
+    <a href="/" class="btn">Open Web App</a>
+  </div>
 
-<div class="note">
-Need Node.js? Download free from <a href="https://nodejs.org" style="color:#00bcd4">nodejs.org</a> → LTS version
-</div>
+  <!-- Linux/Mac -->
+  <div class="card">
+    <div class="card-header">
+      <span class="icon">🐧</span>
+      <div>
+        <div class="card-title">Linux / macOS Agent</div>
+        <div class="card-sub">Run on your laptop for real scanning</div>
+      </div>
+    </div>
+    <div class="steps">
+      <b>Step 1:</b> Download caf-wifi-agent.js<br/>
+      <b>Step 2:</b> node caf-wifi-agent.js<br/>
+      <b>Step 3:</b> In app → Connect Agent → enter your IP
+    </div>
+    <a href="/caf-wifi-agent.js" download class="btn">⬇ Download agent.js</a>
+  </div>
 </div>
 </body>
 </html>
